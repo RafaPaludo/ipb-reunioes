@@ -40,8 +40,6 @@ function toDigits(value) {
 
 const inputValue = ref('')
 
-console.log(inputValue)
-
 watch(
   () => props.modelValue,
   (val = '') => {
