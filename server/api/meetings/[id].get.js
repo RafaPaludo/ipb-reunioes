@@ -37,10 +37,18 @@ export default defineEventHandler(async (event) => {
     select += `,
       meeting_participants(
         id,
+        role,
+        status,
         contacts(
           id,
           name,
           email,
+          phone,
+          created_at
+        ),
+        users(
+          id,
+          name,
           phone,
           created_at
         )
@@ -79,16 +87,38 @@ export default defineEventHandler(async (event) => {
   // 🧹 6) Normaliza participantes (se carregados)
   // --------------------------------------------
   if (include.includes('participants') && data.meeting_participants) {
-    data.meeting_participants = data.meeting_participants
-      .filter((p) => p.contacts !== null)
-      .map((p) => ({
-        user_id: p.id,
-        id: p.contacts.id,
-        email: p.contacts.email,
-        phone: p.contacts.phone,
-        name: p.contacts.name,
-        created_at: p.contacts.created_at
-      }))
+    data.meeting_participants = (data.meeting_participants || []).map((participant) => {
+      // Participante vindo de contacts
+      if (participant.contacts) {
+        return {
+          id: participant.id,
+          type: 'contact',
+          contact_id: participant.contacts.id,
+          name: participant.contacts.name,
+          email: participant.contacts.email,
+          phone: participant.contacts.phone,
+          created_at: participant.contacts.created_at,
+          role: participant.role,
+          status: participant.status,
+        }
+      }
+
+      // Participante vindo de users
+      if (participant.users) {
+        return {
+          id: participant.id,
+          type: 'user',
+          user_id: participant.users.id,
+          name: participant.users.name,
+          phone: participant.users.phone,
+          created_at: participant.users.created_at,
+          role: participant.role,
+          status: participant.status,
+        }
+      }
+
+      return null
+    }).filter(Boolean)
   }
 
   return data

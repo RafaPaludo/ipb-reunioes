@@ -32,7 +32,7 @@
           <template #content="{ item }">
             <UPageCard variant="soft">
               <div class="flex gap-2 items-center">
-                <UIcon name="i-lucide-lightbulb" />
+                <UIcon name="material-symbols:text-ad-outline" class="size-5" />
                 <span>Resumo</span>
               </div>
 
@@ -46,33 +46,24 @@
 
               <!-- Lista de encaminhamentos -->
               <div class="flex gap-2 items-center mt-4">
-                <UIcon name="i-lucide-lightbulb" />
+                <UIcon name="material-symbols:list-alt-check-outline-rounded" class="size-5" />
                 <span>
                   Encaminhamentos
                 </span>
               </div>
-              <div class="ml-6">
-                <div  v-if="item.edit">
-                  <UTextarea placeholder="Adicionar encaminhamento" class="w-full" />
-                  <div class="my-4">
-                    Atribuir: <UInput placeholder="Atribuir ..." />
-                    Data de entrega: <UInput placeholder="Data entrega" />
-                  </div>
-                  <div class="flex gap-2">
-                    <UButton>Adicionar</UButton>
-                    <UButton variant="outline" @click="() => item.edit = false">Cancelar</UButton>
-                  </div>
-                </div>
 
-                <UButton
-                  v-else
-                  color="primary"
-                  variant="soft"
-                  icon="i-lucide-plus"
-                  @click="() => item.edit = true"
-                >
-                  Adicionar encaminhamento
-                </UButton>
+              <div v-for="value in item.agendaPoints" class="ml-6 flex items-center gap-4">
+                <UCheckbox />
+                {{ value }}
+              </div>
+
+              <div class="ml-6">
+                <MeetingsEditAddForwarding
+                  :agenda="item"
+                  :meetingId="route.params.id"
+                  :participants="participants"
+                  @update:agendas="(forwarding) => addForwardingIntoAgenda(forwarding, item)"
+                />
               </div>
             </UPageCard>
           </template>
@@ -100,12 +91,14 @@ const meeting = ref({
   attachment_url: '',
 })
 
+const participants = ref([])
+
 async function getMeetingWithAgenda() {
   loading.value = true
   
   try {
     const data = await $fetch(`/api/meetings/${route.params.id}`, {
-      params: { include: 'agendas' }
+      params: { include: 'agendas,participants' }
     })
 
     // Popula as informações da reunião
@@ -117,8 +110,9 @@ async function getMeetingWithAgenda() {
     meeting.value.meeting_url = data.meeting_url || ''
     meeting.value.meeting_type = data.meeting_type || ''
     meeting.value.attachment_url = data.attachment_url || ''
-
-    debugger
+    
+    // Popula os participantes contatos + user
+    participants.value = data.meeting_participants
 
     // Popula as agendas no formato esperado pelo accordion
     if (data.meeting_agendas && data.meeting_agendas.length > 0) {
@@ -127,30 +121,39 @@ async function getMeetingWithAgenda() {
           id: agenda.id || '',
           label: agenda.title || '',
           content: agenda.content || '',
-          agendaPoints: agenda.agenda_points || [],
-          edit: false
+          agendaPoints: agenda.agenda_points || []
         }
       })
     }
   } catch (err) {
     console.error(err)
-    alert('Erro ao buscar a reunião')
+    alert('Erro ao buscar dados da reunião')
   } finally {
     loading.value = false
   }
 }
 
 async function saveAgendaContent (content, agendaId) {
-  await $fetch(`/api/agendas/${agendaId}`, {
-    method: "PATCH",
-    body: {
-      content: content,
-      meeting_id: route.params.id,
-    }
-  })
+  try {
+    await $fetch(`/api/agendas/${agendaId}`, {
+      method: "PATCH",
+      body: {
+        content: content,
+        meeting_id: route.params.id,
+      }
+    })
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao salvar o conteúdo da pauta.')
+  }
 }
 
 const { debouncedFn: saveAgendaContentDebounced } = useDebounce(saveAgendaContent, 5000)
+
+function addForwardingIntoAgenda (forwarding, item) {
+  const modifiedAgenda = agendas.value.find(agenda => agenda.id === item.id)
+  modifiedAgenda.agendaPoints.push(forwarding)
+}
 
 onMounted(async () => {
   await getMeetingWithAgenda()
