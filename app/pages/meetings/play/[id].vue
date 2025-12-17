@@ -52,17 +52,18 @@
                 </span>
               </div>
 
-              <div v-for="value in item.agendaPoints" class="ml-6 flex items-center gap-4">
-                <UCheckbox />
-                {{ value }}
+              <div v-for="agendaPoint in item.agendaPoints" class="ml-6 flex items-center gap-4">
+                <MeetingsEditCompleteAgendaPoint
+                  :agendaPoint="agendaPoint"
+                />
               </div>
 
               <div class="ml-6">
-                <MeetingsEditAddForwarding
+                <MeetingsEditAddAgendaPoint
                   :agenda="item"
                   :meetingId="route.params.id"
                   :participants="participants"
-                  @update:agendas="(forwarding) => addForwardingIntoAgenda(forwarding, item)"
+                  @update:agendas="(agendaPoint) => addAgendaPointIntoAgenda(agendaPoint, item)"
                 />
               </div>
             </UPageCard>
@@ -150,9 +151,9 @@ async function saveAgendaContent (content, agendaId) {
 
 const { debouncedFn: saveAgendaContentDebounced } = useDebounce(saveAgendaContent, 5000)
 
-function addForwardingIntoAgenda (forwarding, item) {
+function addAgendaPointIntoAgenda (agendaPoint, item) {
   const modifiedAgenda = agendas.value.find(agenda => agenda.id === item.id)
-  modifiedAgenda.agendaPoints.push(forwarding)
+  modifiedAgenda.agendaPoints.push(agendaPoint)
 }
 
 onMounted(async () => {
