@@ -129,9 +129,10 @@ async function addAgendaPoint ({ data }, agenda) {
       body: {
         agenda_id: agenda.id,
         content: data.agendaPoint,
-        participant_id: null,
+        participant_id: data.assigned,
         status: 'pending',
-        order_index: 0
+        order_index: 0,
+        due_date: convertUCalendarToTimeStampZ(data.dueDate),
       }
     })
 
