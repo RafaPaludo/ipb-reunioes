@@ -5,7 +5,7 @@ export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
   const body = await readBody(event)
 
-  const { agenda_id, content, participant_id, status, order_index } = body
+  const { agenda_id, content, participant_id, status, order_index, due_date } = body
 
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Não autenticado.' })
@@ -56,6 +56,7 @@ export default defineEventHandler(async (event) => {
       participant_id: participant_id || null,
       status: status || 'pending',
       order_index: order_index ?? 0,
+      due_date,
     })
     .select()
     .single()
