@@ -84,6 +84,7 @@ async function updateAgendaPointStatus () {
 }
 
 async function deleteAgendaPoint () {
+  waitingChangeResolve.value = true
   try {
     await $fetch(`/api/agenda-points/${currentAgendaPoint.value.id}`, {
       method: 'DELETE'
@@ -98,6 +99,8 @@ async function deleteAgendaPoint () {
   } catch (error) {
     console.error(error)
     alert('Erro ao deletar o encaminhamento.')
+  } finally {
+    waitingChangeResolve.value = false
   }
 }
 
