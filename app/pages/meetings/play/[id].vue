@@ -119,10 +119,10 @@ async function getMeetingWithAgenda() {
 
     // Popula as agendas no formato esperado pelo accordion
     if (data.meeting_agendas && data.meeting_agendas.length > 0) {
-      agendas.value = data.meeting_agendas.map(agenda => {
+      agendas.value = data.meeting_agendas.map((agenda, idx) => {
         return {
           id: agenda.id || '',
-          label: agenda.title || '',
+          label:  idx + 1 + "ª Pauta: " + (agenda.title || ''),
           content: agenda.content || '',
           agendaPoints: agenda.agenda_points || []
         }
