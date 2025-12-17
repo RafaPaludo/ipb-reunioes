@@ -53,13 +53,13 @@
               </div>
 
               <div v-for="agendaPoint in item.agendaPoints" class="ml-6 flex items-center gap-4">
-                <MeetingsEditCompleteAgendaPoint
+                <MeetingsPlayCompleteAgendaPoint
                   :agendaPoint="agendaPoint"
                 />
               </div>
 
               <div class="ml-6">
-                <MeetingsEditAddAgendaPoint
+                <MeetingsPlayAddAgendaPoint
                   :agenda="item"
                   :meetingId="route.params.id"
                   :participants="participants"
