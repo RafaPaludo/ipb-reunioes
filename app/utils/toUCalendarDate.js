@@ -2,8 +2,7 @@ import { CalendarDate } from '@internationalized/date'
 
 /**
  * Converte um timestamptz (ex: "2025-10-05T14:00:00.000Z")
- * para uma string simples no formato "HH:mm",
- * compatível com o input de hora do Nuxt UI.
+ * para uma objeto no formato UCalendar
  */
 export function toUCalendarDate(timestampz) {
   const date = new Date(timestampz)

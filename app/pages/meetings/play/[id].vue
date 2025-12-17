@@ -40,7 +40,7 @@
                 v-model="item.content"
                 class="w-full ml-6"
                 autoresize
-                placeholder="Síntise da pauta"
+                placeholder="Use este campo para registrar os principais pontos discutidos"
                 @update:model-value="saveAgendaContentDebounced($event, item.id)"
               />
 
@@ -52,15 +52,16 @@
                 </span>
               </div>
 
-              <MeetingsPlayCompleteAgendaPoint
+              <MeetingsPlayAgendaPointItem
                 v-for="agendaPoint in item.agendaPoints"
                 :key="agendaPoint.id"
                 :agendaPoint="agendaPoint"
+                :participants="participants"
                 class="ml-6"
               />
               
               <div class="ml-6">
-                <MeetingsPlayAddAgendaPoint
+                <MeetingsPlayAgendaPointAdd
                   :agenda="item"
                   :meetingId="route.params.id"
                   :participants="participants"
