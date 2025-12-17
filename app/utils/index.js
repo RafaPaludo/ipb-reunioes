@@ -18,8 +18,6 @@ export function normalizePhoneNumber(phone) {
 export function unFormatPhoneNumber(phone) {
   const digits = normalizePhoneNumber(phone)
 
-  console.log(digits)
-
   if (digits.length !== 11) return phone // retorna como está se não tiver 11 dígitos
 
   const ddd = digits.slice(0, 2)
