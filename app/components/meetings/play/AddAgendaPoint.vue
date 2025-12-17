@@ -1,14 +1,14 @@
 <template>
   <div>
     <UForm
-      v-if="isEditting"
+      v-if="isEditing"
       :schema="schema"
-      :state="state"
-      @submit="($event) => addAgendaPoint($event, props.agenda)"
+      :state="formState"
+      @submit="($event) => createAgendaPoint($event, props.agenda)"
     >
       <UFormField name="agendaPoint">
         <UTextarea
-          v-model="state.agendaPoint"
+          v-model="formState.agendaPoint"
           placeholder="Adicionar encaminhamento"
           class="w-full"
           :rows="1"
@@ -26,7 +26,7 @@
           :ui="{ container: 'flex-1',  }"
         >
           <USelectMenu
-            v-model="state.assigned"
+            v-model="formState.assigned"
             :items="props.participants"
             value-key="id"
             size="lg"
@@ -55,11 +55,11 @@
         >
           <UPopover>
             <UButton variant="subtle" icon="i-lucide-calendar" size="lg">
-              {{ state.dueDate ? df.format(state.dueDate.toDate(getLocalTimeZone())) : 'Selecione a data' }}
+              {{ formState.dueDate ? df.format(formState.dueDate.toDate(getLocalTimeZone())) : 'Selecione a data' }}
             </UButton>
     
             <template #content>
-              <UCalendar v-model="state.dueDate" class="p-2"  />
+              <UCalendar v-model="formState.dueDate" class="p-2"  />
             </template>
           </UPopover>
         </UFormField>
@@ -67,7 +67,7 @@
   
       <div class="flex gap-2">
         <UButton type="submit">Adicionar</UButton>
-        <UButton variant="outline" @click="resetForwardingForm">Cancelar</UButton>
+        <UButton variant="outline" @click="resetAgendaPointForm">Cancelar</UButton>
       </div>
     </UForm>
   
@@ -76,7 +76,7 @@
       color="primary"
       variant="soft"
       icon="i-lucide-plus"
-      @click="isEditting = true"
+      @click="isEditing = true"
     >
       Adicionar encaminhamento
     </UButton>
@@ -97,12 +97,10 @@ const props = defineProps({
     required: true,
   }
 })
-
 const emit = defineEmits(['update:agendas'])
 
 const df = new DateFormatter('pt-BR', { dateStyle: 'medium' })
 
-const isEditting = ref(false)
 const schema = z.object({
   agendaPoint: z.string('Encaminhamento necessário').min(2, 'Precisa ter ao menos 2 letras'),
   assigned: z.union([z.number('Campo necessário'), z.string('Campo necessário')]),
@@ -116,13 +114,15 @@ const schema = z.object({
     year: z.number(),
   }),
 })
-const state = reactive({
+
+const isEditing = ref(false)
+const formState = reactive({
   agendaPoint: '',
   assigned: undefined,
   dueDate: undefined,
 })
 
-async function addAgendaPoint ({ data }, agenda) {
+async function createAgendaPoint ({ data }, agenda) {
   try {
     const agendaPointCreated = await $fetch(`/api/agenda-points`, {
       method: "POST",
@@ -137,18 +137,20 @@ async function addAgendaPoint ({ data }, agenda) {
     })
 
     emit('update:agendas', agendaPointCreated)
-    isEditting.value = false
+
+    resetAgendaPointForm()
+    isEditing.value = false
   } catch (error) {
     console.error(error)
     alert('Erro ao salvar o encaminhamento.')
   }
 }
 
-function resetForwardingForm () {
-  isEditting.value = false
+function resetAgendaPointForm () {
+  isEditing.value = false
 
-  state.agendaPoint = ''
-  state.assigned = undefined
-  state.dueDate = undefined
+  formState.agendaPoint = ''
+  formState.assigned = undefined
+  formState.dueDate = undefined
 }
 </script>
