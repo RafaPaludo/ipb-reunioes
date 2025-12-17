@@ -1,7 +1,8 @@
 <template>
   <UCheckbox
+    :disabled="waitingChangeResolve"
     :defaultValue="isResolved"
-    @update:modelValue="changeAgendaPointStatus(currentAgendaPoint.status)"
+    @update:modelValue="toggleAgendaPointStatus(currentAgendaPoint.status)"
   />
 
   <span :class="{ 'line-through': isResolved }">
@@ -17,26 +18,45 @@ const props = defineProps({
   }
 })
 
-const currentAgendaPoint = ref(props.agendaPoint)
+// Cópia local do encaminhamento para permitir alterações otimistas na UI
+const currentAgendaPoint = ref({ ...props.agendaPoint })
 
+// Flag de loading para evitar múltiplas ações simultâneas
+const waitingChangeResolve = ref(false)
+
+// ================================
+
+// Indica se o encaminhamento está resolvido
 const isResolved = computed(() => currentAgendaPoint.value.status === 'resolved')
 
-const statusConfig = Object.freeze({
+// ================================
+// Constants / Config
+// ================================
+const statusTransition = Object.freeze({
   pending: 'resolved',
   resolved: 'pending',
 })
 
-async function changeAgendaPointStatus (status) {
-  currentAgendaPoint.value.status = statusConfig[status]
+// ================================
+// Watchers
+// ================================
+// Mantém o estado local sincronizado caso o prop mude externamente
+watch(
+  () => props.agendaPoint,
+  (newValue) => {
+    currentAgendaPoint.value = { ...newValue }
+  }
+)
 
-  await updateAgendaPoint(currentAgendaPoint.value)
-}
+// ================================
+// Actions (API)
+// ================================
+async function updateAgendaPointStatus () {
+  waitingChangeResolve.value = true
 
-
-async function updateAgendaPoint (agendaPoint) {
   try {
-    await $fetch(`/api/agenda-points/${agendaPoint.id}`, {
-      method: "PATCH",
+    await $fetch(`/api/agenda-points/${currentAgendaPoint.value.id}`, {
+      method: 'PATCH',
       body: {
         status: currentAgendaPoint.value.status,
       }
@@ -44,6 +64,19 @@ async function updateAgendaPoint (agendaPoint) {
   } catch (error) {
     console.error(error)
     alert('Erro ao salvar o encaminhamento.')
+  } finally {
+    waitingChangeResolve.value = false
   }
+}
+
+// ================================
+// UI Handlers
+// ================================
+// Alterna o status do encaminhamento (pending <-> resolved)
+async function toggleAgendaPointStatus () {
+  const currentStatus = currentAgendaPoint.value.status
+  currentAgendaPoint.value.status = statusTransition[currentStatus]
+
+  await updateAgendaPointStatus()
 }
 </script>
