@@ -1,13 +1,12 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
 
 export default defineEventHandler(async (event) => {
+  const agendaPointId = Number(event.context.params?.id)
   const client = await serverSupabaseClient(event)
   const user = await serverSupabaseUser(event)
-  const agendaPointId = getRouterParam(event, 'id')
-  const body = await readBody(event)
 
   if (!user) {
-    throw createError({ statusCode: 401, statusMessage: 'Não autenticado.' })
+    throw createError({ statusCode: 401, statusMessage: 'Não autorizado' })
   }
 
   // 1️⃣ Buscar o encaminhamento e descobrir a agenda
@@ -45,35 +44,14 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 3️⃣ Campos permitidos para update
-  const allowedFields = [
-    'content',
-    'status',
-    'participant_id',
-    'order_index',
-    'due_date',
-  ]
-  const payload = {}
-
-  for (const field of allowedFields) {
-    if (field in body) payload[field] = body[field]
-  }
-
-  if (Object.keys(payload).length === 0) {
-    throw createError({ statusCode: 400, statusMessage: 'Nenhum campo válido enviado.' })
-  }
-
-  // 4️⃣ Atualizar o encaminhamento
-  const { data: updatedPoint, error: updateError } = await client
+  const { error } = await client
     .from('agenda_points')
-    .update(payload)
+    .delete()
     .eq('id', agendaPointId)
-    .select()
-    .single()
 
-  if (updateError) {
-    throw createError({ statusCode: 400, statusMessage: updateError.message })
+  if (error) {
+    throw createError({ statusCode: 500, statusMessage: error.message })
   }
 
-  return updatedPoint
+  return { success: true }
 })

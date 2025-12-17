@@ -52,12 +52,13 @@
                 </span>
               </div>
 
-              <div v-for="agendaPoint in item.agendaPoints" class="ml-6 flex items-center gap-4">
-                <MeetingsPlayCompleteAgendaPoint
-                  :agendaPoint="agendaPoint"
-                />
-              </div>
-
+              <MeetingsPlayCompleteAgendaPoint
+                v-for="agendaPoint in item.agendaPoints"
+                :key="agendaPoint.id"
+                :agendaPoint="agendaPoint"
+                class="ml-6"
+              />
+              
               <div class="ml-6">
                 <MeetingsPlayAddAgendaPoint
                   :agenda="item"

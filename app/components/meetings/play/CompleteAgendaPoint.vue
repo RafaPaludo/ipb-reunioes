@@ -1,16 +1,29 @@
 <template>
-  <UCheckbox
-    :disabled="waitingChangeResolve"
-    :defaultValue="isResolved"
-    @update:modelValue="toggleAgendaPointStatus(currentAgendaPoint.status)"
-  />
-
-  <span :class="{ 'line-through': isResolved }">
-    {{ currentAgendaPoint.content }}
-  </span>
+  <div v-if="!isDeleted" class="flex items-center gap-4">
+    <UCheckbox
+      :disabled="waitingChangeResolve"
+      :defaultValue="isResolved"
+      @update:modelValue="toggleAgendaPointStatus(currentAgendaPoint.status)"
+    />
+  
+    <span :class="{ 'line-through': isResolved }">
+      {{ currentAgendaPoint.content }}
+    </span>
+  
+    <UButton
+      label="Deletar"
+      color="error"
+      variant="solid"
+      loading-auto
+      size="xs"
+      @click="deleteAgendaPoint"
+    />
+  </div>
 </template>
 
 <script setup>
+const toast = useToast()
+
 const props = defineProps({
   agendaPoint: {
     type: Object,
@@ -20,6 +33,7 @@ const props = defineProps({
 
 // Cópia local do encaminhamento para permitir alterações otimistas na UI
 const currentAgendaPoint = ref({ ...props.agendaPoint })
+const isDeleted = ref(false)
 
 // Flag de loading para evitar múltiplas ações simultâneas
 const waitingChangeResolve = ref(false)
@@ -66,6 +80,24 @@ async function updateAgendaPointStatus () {
     alert('Erro ao salvar o encaminhamento.')
   } finally {
     waitingChangeResolve.value = false
+  }
+}
+
+async function deleteAgendaPoint () {
+  try {
+    await $fetch(`/api/agenda-points/${currentAgendaPoint.value.id}`, {
+      method: 'DELETE'
+    })
+
+    toast.add({
+      title: 'Encaminhamento deletado',
+      description: 'O encaminhamento foi deletado com sucesso.'
+    })
+
+    isDeleted.value = true
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao deletar o encaminhamento.')
   }
 }
 
