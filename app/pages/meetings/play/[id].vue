@@ -10,9 +10,9 @@
 
     <template #body>
       <div class="w-full mx-auto">
-        <div class="mb-4">
+        <div class="mb-4" v-if="!loading">
           <h3 class="text-lg font-bold">{{ meeting.title }}</h3>
-          <p class="my-2">
+          <p class="my-2" >
             {{ meeting.date }} •
             {{ meeting.start_time }} / {{ meeting.end_time }} •
             <span v-if="meeting.meeting_type === 'presencial'">{{ meeting.location }}</span>
@@ -24,7 +24,9 @@
               >{{ meeting.meeting_url }}</UButton>
             </div>
           </p>
-          <UButton @click="() => {}">FInalizar Reunião</UButton>
+          <UButton @click="startMeeting" v-if="meetingInitialized" color="primary" icon="i-lucide-play">Iniciar a Reunião</UButton>
+          <UButton @click="finishMeeting" v-else-if="meetingInProgress" color="success" icon="material-symbols:check-circle" variant="subtle">Finalizar Reunião</UButton>
+          <UButton @click="startMeeting" v-else color="warning" icon="material-symbols:restart-alt" variant="subtle">Reabrir Reunião</UButton>
         </div>
         
         <!-- Agendas -->
@@ -42,6 +44,7 @@
                 autoresize
                 placeholder="Use este campo para registrar os principais pontos discutidos"
                 @update:model-value="saveAgendaContentDebounced($event, item.id)"
+                :disabled="!canEdit"
               />
 
               <!-- Lista de encaminhamentos -->
@@ -57,6 +60,7 @@
                 :key="agendaPoint.id"
                 :agendaPoint="agendaPoint"
                 :participants="participants"
+                :disabled="!canEdit"
                 class="ml-6"
               />
               
@@ -65,6 +69,7 @@
                   :agenda="item"
                   :meetingId="route.params.id"
                   :participants="participants"
+                  :disabled="!canEdit"
                   @update:agendas="(agendaPoint) => addAgendaPointIntoAgenda(agendaPoint, item)"
                 />
               </div>
@@ -78,23 +83,33 @@
 
 <script setup>
 const route = useRoute()
+const toast = useToast()
 
 const loading = ref(true)
-
 const agendas = ref([])
-
+const participants = ref([])
 const meeting = ref({
-  title: 'Título da reunião',
-  date: '20/12/2025',
-  start_time: '9:00',
-  end_time: '10:00',
-  location: 'Centro',
+  title: '',
+  date: '',
+  start_time: '',
+  end_time: '',
+  location: '',
   meeting_url: '',
-  meeting_type: 'presencial',
+  meeting_type: '',
   attachment_url: '',
+  meeting_status: 'scheduled',
 })
 
-const participants = ref([])
+const editPermission = Object.freeze({
+  scheduled: false,
+  in_progress: true,
+  paused: true,
+  finished: false,
+})
+
+const meetingInitialized = computed(() => meeting.value.meeting_status === 'scheduled')
+const meetingInProgress = computed(() => meeting.value.meeting_status === 'in_progress')
+const canEdit = computed(() => editPermission[meeting.value.meeting_status])
 
 async function getMeetingWithAgenda() {
   loading.value = true
@@ -106,13 +121,14 @@ async function getMeetingWithAgenda() {
 
     // Popula as informações da reunião
     meeting.value.title = data.title || ''
-    meeting.value.date = toUCalendarDate(data.start_time) || null
+    meeting.value.date = convertTimeStampzToLocalDate(data.start_time) || null
     meeting.value.start_time = convertTimestampToTimeStringWithTZ(data.start_time) || ''
     meeting.value.end_time = convertTimestampToTimeStringWithTZ(data.end_time) || ''
     meeting.value.location = data.location || ''
     meeting.value.meeting_url = data.meeting_url || ''
     meeting.value.meeting_type = data.meeting_type || ''
     meeting.value.attachment_url = data.attachment_url || ''
+    meeting.value.meeting_status = data.meeting_status || 'scheduled'
     
     // Popula os participantes contatos + user
     participants.value = data.meeting_participants
@@ -133,6 +149,38 @@ async function getMeetingWithAgenda() {
     alert('Erro ao buscar dados da reunião')
   } finally {
     loading.value = false
+  }
+}
+
+async function startMeeting () {
+  try {
+    await $fetch(`/api/meetings/${route.params.id}/status`, {
+      method: 'PATCH',
+      body: { meeting_status: 'in_progress' }
+    })
+    
+    await getMeetingWithAgenda()
+
+    toast.add({ title: 'Sucesso', description: `Reunião iniciada`, color: 'success' })
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao iniciar a reunião.')
+  }
+}
+
+async function finishMeeting() {
+  try {
+    await $fetch(`/api/meetings/${route.params.id}/status`, {
+      method: 'PATCH',
+      body: { meeting_status: 'finished' }
+    })
+    
+    await getMeetingWithAgenda()
+
+    toast.add({ title: 'Sucesso', description: `Reunião finalizada`, color: 'success' })
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao finalizar a reunião.')
   }
 }
 

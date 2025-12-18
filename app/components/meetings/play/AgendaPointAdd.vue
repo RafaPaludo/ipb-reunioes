@@ -76,6 +76,7 @@
       color="primary"
       variant="soft"
       icon="i-lucide-plus"
+      :disabled="disabled"
       @click="isEditing = true"
     >
       Adicionar encaminhamento
@@ -95,7 +96,11 @@ const props = defineProps({
   participants: {
     type: Array,
     required: true,
-  }
+  },
+  disabled: {
+    type: Boolean,
+    default: true
+  },
 })
 const emit = defineEmits(['update:agendas'])
 

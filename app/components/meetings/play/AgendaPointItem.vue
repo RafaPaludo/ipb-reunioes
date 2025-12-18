@@ -6,7 +6,7 @@
     >
       <div class="flex items-center gap-4">
         <UCheckbox
-          :disabled="waitingChangeResolve"
+          :disabled="disabledActions"
           :model-value="isResolved"
           @update:modelValue="toggleAgendaPointStatus"
         />
@@ -25,7 +25,7 @@
           variant="ghost"
           size="xs"
           class="ml-auto"
-          :disabled="waitingChangeResolve"
+          :disabled="disabledActions"
           @click="deleteAgendaPoint"
         />
       </div>
@@ -66,6 +66,10 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  disabled: {
+    type: Boolean,
+    default: true
+  },
 })
 
 // ================================
@@ -85,6 +89,7 @@ const waitingChangeResolve = ref(false)
 // ================================
 // Verifica se o encaminhamento está resolvido
 const isResolved = computed(() => currentAgendaPoint.value.status === 'resolved')
+const disabledActions = computed(() => props.disabled || waitingChangeResolve.value)
 
 // Participante responsável pelo encaminhamento
 const participantAssignedToAgendaPoint = computed(() => {

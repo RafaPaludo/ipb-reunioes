@@ -27,7 +27,8 @@ export default defineEventHandler(async (event) => {
     location,
     meeting_url,
     title,
-    meeting_type
+    meeting_type,
+    meeting_status
   `
 
   // --------------------------------------------
