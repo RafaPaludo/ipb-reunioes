@@ -45,7 +45,7 @@
           block
           :to="`/meetings/play/${meeting.id}`"
         >
-          Iniciar reunião
+          Ir para a reunião
           <UIcon
             name="i-lucide-square-play"
             class="size-6 text-center"
