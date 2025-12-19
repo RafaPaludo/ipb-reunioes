@@ -92,7 +92,7 @@ async function saveEditMeeting () {
     loading.value = true
 
     const { error } = await $fetch(`/api/meetings/${route.params.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: {
         meeting: {
           title: meeting.value.title,

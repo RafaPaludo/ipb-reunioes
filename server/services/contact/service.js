@@ -1,6 +1,7 @@
 import { 
   insertContact,
   getAllContactsByUser,
+  updateContactByUser,
 } from '../../repositories/contact.repository'
 
 export async function insertContactService({ payload, userId, supabase }) {
@@ -23,4 +24,8 @@ export async function insertContactService({ payload, userId, supabase }) {
 
 export async function getAllContactsByUserService({ userId, supabase }) {
   return await getAllContactsByUser(userId, supabase)
+}
+
+export async function updateContactByUserService({ userId, supabase, contactId, payload }) {
+  return await updateContactByUser(payload, contactId, userId, supabase)
 }

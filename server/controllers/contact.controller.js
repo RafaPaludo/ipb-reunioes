@@ -1,6 +1,7 @@
 import {
   insertContactService,
   getAllContactsByUserService,
+  updateContactByUserService,
 } from '../services/contact/service.js'
 
 export async function insertContactController({ payload, userId, supabase }) {
@@ -24,6 +25,19 @@ export async function getAllContactsByUserController({ userId, supabase }) {
     return await getAllContactsByUserService({
       userId,
       supabase,
+    })
+  } catch (error) {
+    throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+
+export async function updateContactByUserController({ userId, supabase, contactId, payload }) {
+  try {
+    return await updateContactByUserService({
+      userId,
+      supabase,
+      payload,
+      contactId,
     })
   } catch (error) {
     throw createError({ statusCode: 400, statusMessage: error.message })
