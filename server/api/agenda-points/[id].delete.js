@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { deleteAgendaPointById } from '../../controllers/agenda-points.controller'
+import { deleteAgendaPointByIdController } from '../../controllers/agenda-points.controller'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -11,7 +11,7 @@ export default defineEventHandler(async (event) => {
   const agendaPointId = getRouterParam(event, 'id')
   const supabase = await serverSupabaseClient(event)
 
-  return deleteAgendaPointById({
+  return deleteAgendaPointByIdController({
     agendaPointId: agendaPointId,
     userId: user.sub,
     supabase,

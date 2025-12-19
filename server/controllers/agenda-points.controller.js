@@ -28,7 +28,7 @@ export async function insertAgendaPointsController({ payload, userId, supabase }
   }
 }
 
-export async function updateAgendaPoint({ agendaPointId, payload, userId, supabase }) {
+export async function updateAgendaPointController({ agendaPointId, payload, userId, supabase }) {
   try {
     return await updateAgendaPointsService({
       agendaPointId,
@@ -65,7 +65,7 @@ export async function updateAgendaPoint({ agendaPointId, payload, userId, supaba
   }
 }
 
-export async function deleteAgendaPointById({ agendaPointId, userId, supabase }) {
+export async function deleteAgendaPointByIdController({ agendaPointId, userId, supabase }) {
   try {
     return await deleteAgendaPointsService({
       agendaPointId,

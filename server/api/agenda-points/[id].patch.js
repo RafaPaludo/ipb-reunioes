@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { updateAgendaPoint } from '../../controllers/agenda-points.controller'
+import { updateAgendaPointController } from '../../controllers/agenda-points.controller'
 
 export default defineEventHandler(async (event) => {
   const user = await serverSupabaseUser(event)
@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
 
   const supabase = await serverSupabaseClient(event)
 
-  return updateAgendaPoint({
+  return updateAgendaPointController({
     agendaPointId: agendaPointId,
     payload: body,
     userId: user.sub,
