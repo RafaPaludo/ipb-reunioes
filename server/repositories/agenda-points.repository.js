@@ -40,3 +40,14 @@ export async function updateAgendaPointById(agendaPointId, payload, supabase) {
 
   return data
 }
+
+export async function deleteAgendaPointById(agendaPointId, supabase) {
+  const { data, error } = await supabase
+    .from('agenda_points')
+    .delete()
+    .eq('id', agendaPointId)
+
+  if (error) throw error
+
+  return data
+}

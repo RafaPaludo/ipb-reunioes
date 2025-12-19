@@ -1,4 +1,8 @@
-import { insertAgendaPointsService, updateAgendaPointsService } from '../services/agenda-points/service.js'
+import {
+  insertAgendaPointsService,
+  updateAgendaPointsService,
+  deleteAgendaPointsService,
+} from '../services/agenda-points/service.js'
 
 export async function insertAgendaPointsController({ payload, userId, supabase }) {
   try {
@@ -58,5 +62,25 @@ export async function updateAgendaPoint({ agendaPointId, payload, userId, supaba
       statusCode: 400,
       statusMessage: error.message,
     })
+  }
+}
+
+export async function deleteAgendaPointById({ agendaPointId, userId, supabase }) {
+  try {
+    return await deleteAgendaPointsService({
+      agendaPointId,
+      userId,
+      supabase,
+    })
+  } catch (error) {
+    if (error.message === 'AGENDA_NOT_FOUND') {
+      throw createError({ statusCode: 404, statusMessage: 'Agenda não encontrada.' })
+    }
+
+    if (error.message === 'FORBIDDEN') {
+      throw createError({ statusCode: 403, statusMessage: 'Sem permissão para criar um encaminhamento.' })
+    }
+
+    throw createError({ statusCode: 400, statusMessage: error.message })
   }
 }
