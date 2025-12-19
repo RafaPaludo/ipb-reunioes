@@ -1,5 +1,5 @@
 import { findAgendaById, updateAgenda } from '../../repositories/agenda.repository'
-import { findMeetingById } from '../..//repositories/meeting.repository'
+import { findMeetingById } from '../../repositories/meeting.repository'
 import { pickAllowedFields } from '../../utils/pickAllowedFields'
 
 export async function updateAgendaService({ agendaId, payload, userId, supabase }) {
