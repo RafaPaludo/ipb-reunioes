@@ -34,3 +34,18 @@ export async function updateContactByUser(payload, contactId, userId, supabase) 
 
   return data
 }
+
+export async function getContactByUser(contactId, userId, supabase) {
+  const { data, error } = await supabase
+    .from('contacts')
+    .select('*')
+    .eq('id', contactId)
+    .eq('user_id', userId) // 🔒 só contatos do usuário logado
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+
