@@ -25,8 +25,9 @@
             </div>
           </p>
           <UButton @click="startMeeting" v-if="meetingInitialized" color="primary" icon="i-lucide-play">Iniciar a Reunião</UButton>
-          <UButton @click="finishMeeting" v-else-if="meetingInProgress" color="success" icon="material-symbols:check-circle" variant="subtle">Finalizar Reunião</UButton>
-          <UButton @click="startMeeting" v-else color="warning" icon="material-symbols:restart-alt" variant="subtle">Reabrir Reunião</UButton>
+          <UButton @click="finishMeeting" v-if="meetingInProgress" color="success" icon="material-symbols:check-circle" variant="subtle">Finalizar Reunião</UButton>
+          <UButton @click="startMeeting" v-if="meetingFinished" color="warning" icon="material-symbols:restart-alt" variant="subtle">Reabrir Reunião</UButton>
+          <UButton @click="generateMeetingPDF" v-if="meetingFinished" color="warning" icon="material-symbols:restart-alt" variant="subtle">Gerar PDF</UButton>
         </div>
         
         <!-- Agendas -->
@@ -109,6 +110,7 @@ const editPermission = Object.freeze({
 
 const meetingInitialized = computed(() => meeting.value.meeting_status === 'scheduled')
 const meetingInProgress = computed(() => meeting.value.meeting_status === 'in_progress')
+const meetingFinished = computed(() => meeting.value.meeting_status === 'finished')
 const canEdit = computed(() => editPermission[meeting.value.meeting_status])
 
 async function getMeetingWithAgenda() {
@@ -196,6 +198,23 @@ async function saveAgendaContent (content, agendaId) {
   } catch (error) {
     console.error(error)
     alert('Erro ao salvar o conteúdo da pauta.')
+  }
+}
+
+async function generateMeetingPDF () {
+  try {
+    const pdfUrl = await $fetch(`/api/meetings/${route.params.id}/pdf`, {
+      method: 'GET'
+    })
+    
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank')
+    }
+
+    toast.add({ title: 'Sucesso', description: `PDF gerado com sucesso.`, color: 'success' })
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao gerar o PDF da reunião.')
   }
 }
 
