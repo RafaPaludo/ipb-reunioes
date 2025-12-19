@@ -12,7 +12,7 @@
             block
             :to="`/meetings/play/${route.params.id}`"
           >
-            Iniciar reunião
+            Ir para a reunião
             <UIcon
               name="i-lucide-square-play"
               class="size-6 text-center"
@@ -61,11 +61,13 @@ const meeting = ref({
   agendas: [],
 })
 
-async function getMeettingWithParticipantAndAgenda() {
+async function getMeetingWithParticipantAndAgenda() {
   loading.value = true
   
   try {
-    const data = await $fetch(`/api/meetings/${route.params.id}`)
+    const data = await $fetch(`/api/meetings/${route.params.id}`, {
+      params: { include: 'participants,agendas' }
+    })
 
     meeting.value.title = data.title || ''
     meeting.value.date = toUCalendarDate(data.start_time) || null
@@ -109,7 +111,7 @@ async function saveEditMeeting () {
 
     if (error) throw error
 
-    await getMeettingWithParticipantAndAgenda()
+    await getMeetingWithParticipantAndAgenda()
 
     feedbackCreatedMeeting()
   } catch (err) {
@@ -129,6 +131,6 @@ function feedbackCreatedMeeting () {
 }
 
 onMounted(async () => {
-  await getMeettingWithParticipantAndAgenda()
+  await getMeetingWithParticipantAndAgenda()
 })
 </script>

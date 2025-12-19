@@ -102,7 +102,7 @@ function getRowItems(row) {
   return [
     {
       type: 'label',
-      label: 'Actions'
+      label: 'Ações'
     },
     {
       label: 'Copiar telefone',

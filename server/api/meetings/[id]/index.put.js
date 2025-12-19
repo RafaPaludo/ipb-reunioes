@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import convertUCalendarDate from '../../utils/convertUCalendarDate'
+import convertUCalendarDate from '../../../utils/convertUCalendarDate'
 
 export default defineEventHandler(async (event) => {
   const client = await serverSupabaseClient(event)
@@ -88,6 +88,13 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  /*
+    TODO::
+    
+    NÃO PERMITE REMOVER PARTICIPANTES DEPOIS QUE ELES ESTEJAM COM ENCAMINHAMENTOS ASSINADOS
+  
+  */ 
+  
   // 3. Atualizar participants
   await client
     .from('meeting_participants')
