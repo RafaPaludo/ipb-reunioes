@@ -1,4 +1,7 @@
-import { insertContactService } from '../services/contact/service.js'
+import {
+  insertContactService,
+  getAllContactsByUserService,
+} from '../services/contact/service.js'
 
 export async function insertContactController({ payload, userId, supabase }) {
   try {
@@ -12,6 +15,17 @@ export async function insertContactController({ payload, userId, supabase }) {
       throw createError({ statusCode: 400, statusMessage: 'Nome, email e telefone são obrigatórios.' })
     }
 
+    throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+
+export async function getAllContactsByUserController({ userId, supabase }) {
+  try {
+    return await getAllContactsByUserService({
+      userId,
+      supabase,
+    })
+  } catch (error) {
     throw createError({ statusCode: 400, statusMessage: error.message })
   }
 }

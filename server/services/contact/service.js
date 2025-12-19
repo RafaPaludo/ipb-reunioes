@@ -1,4 +1,7 @@
-import { insertContact } from '../../repositories/contact.repository'
+import { 
+  insertContact,
+  getAllContactsByUser,
+} from '../../repositories/contact.repository'
 
 export async function insertContactService({ payload, userId, supabase }) {
   const { name, email, phone } = payload
@@ -16,4 +19,8 @@ export async function insertContactService({ payload, userId, supabase }) {
     },
     supabase
   )
+}
+
+export async function getAllContactsByUserService({ userId, supabase }) {
+  return await getAllContactsByUser(userId, supabase)
 }
