@@ -1,6 +1,6 @@
 import { findAgendaById } from '../../repositories/agenda.repository'
 import { findMeetingById } from '../../repositories/meeting.repository'
-import { insertAgendaPoint } from '../../repositories/agenda-points.repository'
+import { insertAgendaPoint, findAgendaPointWithMeeting, updateAgendaPointById } from '../../repositories/agenda-points.repository'
 
 export async function insertAgendaPointsService({ payload, userId, supabase }) {
   const { agenda_id, content, participant_id, status, order_index, due_date } = payload
@@ -32,4 +32,44 @@ export async function insertAgendaPointsService({ payload, userId, supabase }) {
   )
 
   return agendaPoint
+}
+
+export async function updateAgendaPointsService({ agendaPointId, payload, userId, supabase }) {
+  const agendaPoint = await findAgendaPointWithMeeting(agendaPointId, supabase)
+  if (!agendaPoint) {
+    throw new Error('AGENDA_POINT_NOT_FOUND')
+  }
+
+  const meetingId = agendaPoint.meeting_agendas?.meeting_id
+  const meeting = await findMeetingById(meetingId, supabase)
+
+  if (!meeting || meeting.created_by !== userId) {
+    throw new Error('FORBIDDEN')
+  }
+
+  const allowedFields = [
+    'content',
+    'status',
+    'participant_id',
+    'order_index',
+    'due_date',
+  ]
+
+  const updatePayload = {}
+
+  for (const field of allowedFields) {
+    if (field in payload) {
+      updatePayload[field] = payload[field]
+    }
+  }
+
+  if (Object.keys(updatePayload).length === 0) {
+    throw new Error('NO_VALID_FIELDS')
+  }
+
+  return updateAgendaPointById(
+    agendaPointId,
+    updatePayload,
+    supabase
+  )
 }
