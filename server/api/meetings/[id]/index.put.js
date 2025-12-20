@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import convertUCalendarDate from '../../../utils/convertUCalendarDate'
+// import convertUCalendarDate from '../../../utils/convertUCalendarDate'
 
 export default defineEventHandler(async (event) => {
   const client = await serverSupabaseClient(event)
@@ -11,8 +11,8 @@ export default defineEventHandler(async (event) => {
   const agendas = meeting.agendas || []
   const participants = body.participants || []
 
-  const start_time = convertUCalendarDate(meeting.date, meeting.start_time)
-  const end_time = convertUCalendarDate(meeting.date, meeting.end_time)
+  const start_time = ''
+  const end_time = '' 
 
   if (!user) {
     throw createError({ statusCode: 401, statusMessage: 'Não autenticado.' })

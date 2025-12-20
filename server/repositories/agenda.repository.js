@@ -16,3 +16,11 @@ export async function updateAgenda(agendaId, payload, supabase) {
 
   if (error) throw error
 }
+
+export async function insertAgendas(payload, supabase) {
+  const { error } = await supabase
+    .from('meeting_agendas')
+    .insert(payload)
+
+  if (error) throw error
+}

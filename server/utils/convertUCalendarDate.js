@@ -1,10 +1,4 @@
-interface UCalendarDate {
-  year: number;
-  month: number;
-  day: number;
-}
-
-export default function convertUCalendarDate (date: UCalendarDate, time = ''){
+export default function convertUCalendarDate (date = {}, time = ''){
   // Reconstrói o objeto Date a partir do UCalendar
   const baseDate = new Date(
     date.year,    // ano
