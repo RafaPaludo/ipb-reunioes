@@ -78,7 +78,7 @@ export async function deleteAgendaPointByIdController({ agendaPointId, userId, s
     }
 
     if (error.message === 'FORBIDDEN') {
-      throw createError({ statusCode: 403, statusMessage: 'Sem permissão para criar um encaminhamento.' })
+      throw createError({ statusCode: 403, statusMessage: 'Sem permissão para deletar um encaminhamento.' })
     }
 
     throw createError({ statusCode: 400, statusMessage: error.message })

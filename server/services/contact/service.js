@@ -3,6 +3,7 @@ import {
   getAllContactsByUser,
   updateContactByUser,
   getContactByUser,
+  deleteContact,
 } from '../../repositories/contact.repository'
 
 export async function insertContactService({ payload, userId, supabase }) {
@@ -28,9 +29,17 @@ export async function getAllContactsByUserService({ userId, supabase }) {
 }
 
 export async function updateContactByUserService({ userId, supabase, contactId, payload }) {
-  return await updateContactByUser(payload, contactId, userId, supabase)
+  return await updateContactByUser({ payload, contactId, userId }, supabase)
 }
 
 export async function getContactByUserService({ userId, supabase, contactId }) {
-  return await getContactByUser(contactId, userId, supabase)
+  return await getContactByUser({ contactId, userId }, supabase)
+}
+
+export async function deleteContactService({ userId, supabase, contactId }) {
+  if (!userId) {
+    throw new Error('VALIDATION_ERROR')
+  }
+
+  return await deleteContact({ contactId, userId }, supabase)
 }

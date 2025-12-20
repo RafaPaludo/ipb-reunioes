@@ -21,7 +21,7 @@ export async function getAllContactsByUser(userId, supabase) {
   return data
 }
 
-export async function updateContactByUser(payload, contactId, userId, supabase) {
+export async function updateContactByUser({ payload, contactId, userId }, supabase) {
   const { data, error } = await supabase
     .from('contacts')
     .update(payload)
@@ -35,10 +35,23 @@ export async function updateContactByUser(payload, contactId, userId, supabase) 
   return data
 }
 
-export async function getContactByUser(contactId, userId, supabase) {
+export async function getContactByUser({ contactId, userId }, supabase) {
   const { data, error } = await supabase
     .from('contacts')
     .select('*')
+    .eq('id', contactId)
+    .eq('user_id', userId) // 🔒 só contatos do usuário logado
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export async function deleteContact({ contactId, userId }, supabase) {
+  const { data, error } = await supabase
+    .from('contacts')
+    .delete()
     .eq('id', contactId)
     .eq('user_id', userId) // 🔒 só contatos do usuário logado
     .single()

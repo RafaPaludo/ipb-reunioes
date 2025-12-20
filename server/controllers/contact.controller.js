@@ -3,6 +3,7 @@ import {
   getAllContactsByUserService,
   updateContactByUserService,
   getContactByUserService,
+  deleteContactService,
 } from '../services/contact/service.js'
 
 export async function insertContactController({ payload, userId, supabase }) {
@@ -53,6 +54,22 @@ export async function getContactByUserController({ userId, contactId, supabase }
       supabase,
     })
   } catch (error) {
+    throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+
+export async function deleteContactController({ userId, contactId, supabase }) {
+  try {
+    return await deleteContactService({
+      contactId,
+      userId,
+      supabase,
+    })
+  } catch (error) {
+    if (error.message === 'VALIDATION_ERROR') {
+      throw createError({ statusCode: 400, statusMessage: 'ID inválido.' })
+    }
+
     throw createError({ statusCode: 400, statusMessage: error.message })
   }
 }
