@@ -40,3 +40,17 @@ export async function findMeetingByTimeRange({ startUTC, endUTC, userId }, supab
 
   return data
 }
+
+export async function updateMeetingStatus({ payload, meetingId, userId }, supabase) {
+  const { data, error } = await supabase
+    .from('meetings')
+    .update(payload)
+    .eq('id', meetingId)
+    .eq('created_by', userId) // 🔒 só reuniões do usuário logado
+    .select()
+    .single() 
+
+  if (error) throw error
+
+  return data
+}

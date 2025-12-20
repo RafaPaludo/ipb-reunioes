@@ -2,12 +2,14 @@ import {
   insertMeeting,
   deleteMeetingById,
   findMeetingByTimeRange,
+  updateMeetingStatus,
 } from '../../repositories/meeting.repository'
 import { insertAgendas } from '../../repositories/agenda.repository'
 import { insertParticipants } from '../../repositories/participant.repository'
 import { insertReminders } from '../../repositories/reminder.repository'
 
 import convertUCalendarDate from '../../utils/convertUCalendarDate'
+import { MEETING_STATUS } from '#shared/constants/meeting-status'
 
 export async function createMeetingWithSetupService({ payload, userId, supabase }) {
   const { title, location, meeting_url, meeting_type, date, start_time, end_time, agendas = [], participants = [] } = payload
@@ -118,6 +120,36 @@ export async function getMeetingAtTimeService({ startUTC, endUTC, userId, supaba
       userId,
       startUTC,
       endUTC
+    },
+    supabase
+  )
+}
+
+export async function updateMeetingStatusService({ meetingId, payload, userId, supabase}) {
+  const { meeting_status } = payload
+  const allowedTransitions = Object.values(MEETING_STATUS).map(meetingStatus => meetingStatus.key)
+
+  if (!allowedTransitions.includes(meeting_status)) {
+    throw new Error('INVALID_STATUS')
+  }
+
+  const payloadToDB = {
+    meeting_status: meeting_status,
+  }
+
+  if (meeting_status === MEETING_STATUS.IN_PROGRESS.key) {
+    payloadToDB.started_at = new Date().toISOString()
+  }
+
+  if (meeting_status === MEETING_STATUS.FINISHED.key) {
+    payloadToDB.finished_at = new Date().toISOString()
+  }
+
+  return await updateMeetingStatus(
+    {
+      payload: payloadToDB,
+      meetingId,
+      userId
     },
     supabase
   )
