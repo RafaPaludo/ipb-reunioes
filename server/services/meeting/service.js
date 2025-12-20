@@ -3,12 +3,15 @@ import {
   deleteMeetingById,
   findMeetingByTimeRange,
   updateMeetingStatus,
+  findMeetingByIdWithIncludes,
 } from '../../repositories/meeting.repository'
 import { insertAgendas } from '../../repositories/agenda.repository'
 import { insertParticipants } from '../../repositories/participant.repository'
 import { insertReminders } from '../../repositories/reminder.repository'
 
 import convertUCalendarDate from '../../utils/convertUCalendarDate'
+import { parseIncludes } from '../../utils/parse-includes'
+
 import { MEETING_STATUS } from '#shared/constants/meeting-status'
 
 export async function createMeetingWithSetupService({ payload, userId, supabase }) {
@@ -110,7 +113,7 @@ function buildMeetingReminders(meetingId, startTime) {
   ]
 }
 
-export async function getMeetingAtTimeService({ startUTC, endUTC, userId, supabase}) {
+export async function getMeetingAtTimeService({ startUTC, endUTC, userId, supabase }) {
   if (new Date(startUTC) > new Date(endUTC)) {
     throw new Error('INVALID_DATE')
   }
@@ -125,7 +128,7 @@ export async function getMeetingAtTimeService({ startUTC, endUTC, userId, supaba
   )
 }
 
-export async function updateMeetingStatusService({ meetingId, payload, userId, supabase}) {
+export async function updateMeetingStatusService({ meetingId, payload, userId, supabase }) {
   const { meeting_status } = payload
   const allowedTransitions = Object.values(MEETING_STATUS).map(meetingStatus => meetingStatus.key)
 
@@ -153,4 +156,65 @@ export async function updateMeetingStatusService({ meetingId, payload, userId, s
     },
     supabase
   )
+}
+
+export async function getMeetingService({ meetingId, query, userId, supabase }) {
+  const ALLOWED_INCLUDES = ['participants', 'agendas']
+
+  const includes = parseIncludes(query.include)
+
+  for (const inc of includes) {
+    if (!ALLOWED_INCLUDES.includes(inc)) {
+      throw new Error('INVALID_INCLUDE')
+    }
+  }
+
+  const meeting = await findMeetingByIdWithIncludes({
+    meetingId,
+    userId,
+    includes,
+    supabase
+  })
+
+  if (!meeting) {
+    throw new Error('NOT_FOUND')
+  }
+
+  // 🔄 Normalização de participantes
+  if (includes.includes('participants')) {
+    meeting.meeting_participants = normalizeParticipants(meeting.meeting_participants)
+  }
+
+  return meeting
+}
+
+function normalizeParticipants(participants = []) {
+  return participants.map(p => {
+    if (p.contacts) {
+      return {
+        id: p.id,
+        type: 'contact',
+        contact_id: p.contacts.id,
+        name: p.contacts.name,
+        email: p.contacts.email,
+        phone: p.contacts.phone,
+        role: p.role,
+        status: p.status,
+      }
+    }
+
+    if (p.users) {
+      return {
+        id: p.id,
+        type: 'user',
+        user_id: p.users.id,
+        name: p.users.name,
+        phone: p.users.phone,
+        role: p.role,
+        status: p.status,
+      }
+    }
+
+    return null
+  }).filter(Boolean)
 }
