@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { getContactByUserController } from '../../controllers/contact.controller'
+import { getContactByUserController } from '../../../controllers/contact.controller'
 
 /*
   Faz a listagem de um único contato da tabela **contacts**

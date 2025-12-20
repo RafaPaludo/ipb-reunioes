@@ -1,5 +1,5 @@
 import { serverSupabaseClient, serverSupabaseUser } from '#supabase/server'
-import { updateContactByUserController } from '../../controllers/contact.controller'
+import { updateContactByUserController } from '../../../controllers/contact.controller'
 
 /*
   Atualiza um contato na tabela **contacts**
