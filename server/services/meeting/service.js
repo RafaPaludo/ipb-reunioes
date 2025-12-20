@@ -1,6 +1,7 @@
 import {
   insertMeeting,
   deleteMeetingById,
+  findMeetingByTimeRange,
 } from '../../repositories/meeting.repository'
 import { insertAgendas } from '../../repositories/agenda.repository'
 import { insertParticipants } from '../../repositories/participant.repository'
@@ -105,4 +106,19 @@ function buildMeetingReminders(meetingId, startTime) {
       reminder_stage: 'third',
     },
   ]
+}
+
+export async function getMeetingAtTimeService({ startUTC, endUTC, userId, supabase}) {
+  if (new Date(startUTC) > new Date(endUTC)) {
+    throw new Error('INVALID_DATE')
+  }
+
+  return await findMeetingByTimeRange(
+    {
+      userId,
+      startUTC,
+      endUTC
+    },
+    supabase
+  )
 }

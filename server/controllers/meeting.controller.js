@@ -1,4 +1,7 @@
-import { createMeetingWithSetupService } from '../services/meeting/service'
+import {
+  createMeetingWithSetupService,
+  getMeetingAtTimeService,
+} from '../services/meeting/service'
 
 export async function createMeetingWithSetupController({ payload, userId, supabase }) {
   try {
@@ -10,6 +13,22 @@ export async function createMeetingWithSetupController({ payload, userId, supaba
   } catch (error) {
     if (error.message === 'INVALID_PAYLOAD') {
       throw createError({ statusCode: 400, statusMessage: 'Dados inválidos' })
+    }
+
+    throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+export async function getMeetingAtTimeController({ startUTC, endUTC, userId, supabase }) {
+  try {
+    return await getMeetingAtTimeService({
+      startUTC,
+      endUTC,
+      userId,
+      supabase,
+    })
+  } catch (error) {
+    if (error.message === 'INVALID_DATE') {
+      throw createError({ statusCode: 400, statusMessage: 'Datas final e inicial erradas.' })
     }
 
     throw createError({ statusCode: 400, statusMessage: error.message })
