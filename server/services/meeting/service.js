@@ -2,10 +2,11 @@ import {
   insertMeeting,
   deleteMeetingById,
   findMeetingByTimeRange,
-  updateMeetingStatus,
   findMeetingByIdWithIncludes,
+  updateMeetingById,
 } from '../../repositories/meeting.repository'
-import { insertAgendas } from '../../repositories/agenda.repository'
+import { insertAgendas, updateAgenda, findAgendasIdByMeetingId, deleteAgendaById } from '../../repositories/agenda.repository'
+import { deleteAgendaPointByAgendaId } from '../../repositories/agenda-points.repository'
 import { insertParticipants } from '../../repositories/participant.repository'
 import { insertReminders } from '../../repositories/reminder.repository'
 
@@ -148,7 +149,7 @@ export async function updateMeetingStatusService({ meetingId, payload, userId, s
     payloadToDB.finished_at = new Date().toISOString()
   }
 
-  return await updateMeetingStatus(
+  return await updateMeetingById(
     {
       payload: payloadToDB,
       meetingId,
@@ -186,6 +187,91 @@ export async function getMeetingService({ meetingId, query, userId, supabase }) 
   }
 
   return meeting
+}
+
+export async function updateMeetingService({ meetingId, payload, userId, supabase }) {
+  const { title, location, meeting_url, meeting_type, date, start_time, end_time, agendas = [], participants = [] } = payload
+
+  if (!title || !date || !start_time || !end_time) {
+    throw new Error('INVALID_PAYLOAD')
+  }
+
+  // Converte datas do objeto UCalendar para timestamptz
+  const startTime = convertUCalendarDate(date, start_time)
+  const endTime = convertUCalendarDate(date, end_time)
+  const payloadToDB = {
+    title,
+    location,
+    meeting_type,
+    meeting_url,
+    start_time: startTime,
+    end_time: endTime,
+  }
+
+  let meeting
+
+  try {
+    // Atualiza os dados da reunião
+    meeting = await updateMeetingById(
+      {
+        payload: payloadToDB,
+        meetingId,
+        userId
+      },
+      supabase
+    )
+
+    /*
+      * Remove as agendas e agenda_points excluídas
+      * Atualiza as agendas existentes
+      * Cria novas agendas
+    */
+    const currentAgendasIds = await findAgendasIdByMeetingId(meetingId, supabase)
+    const incomingAgendasIds = new Set(agendas.filter(agenda => agenda.id).map(agenda => agenda.id))
+    const agendasToRemove = currentAgendasIds.filter(agenda => !incomingAgendasIds.has(agenda.id))
+
+    for (const agenda of agendasToRemove) {
+      await deleteAgendaPointByAgendaId(agenda.id, supabase)
+      await deleteAgendaById(agenda.id, supabase)
+    }
+
+    for (let i = 0, j = agendas.length; i < j; i++) {
+      const currentAgenda = agendas[i];
+      
+      // Atualiza as agendas existentes
+      if (currentAgenda.id) {
+        await updateAgenda(
+          currentAgenda.id,
+          { title: currentAgenda.title, meeting_id: meetingId },
+          supabase,
+        )
+      } else {
+        // Cria agendas novas
+        await insertAgendas({ title: currentAgenda.title, meeting_id: meeting.id }, supabase)
+      }
+    }
+
+    // // 3.Partucipantes (sempre inclui o usuário)
+    // const filterd = participants.filter(participant => participant.id !== userId)
+
+    // await insertParticipants(
+    //   [
+    //     ...filterd.map(participant => ({
+    //       contact_id: participant.id,
+    //       meeting_id: meeting.id,
+    //     })),
+    //     {
+    //       user_id: userId,
+    //       meeting_id: meeting.id,
+    //     }
+    //   ],
+    //   supabase
+    // )
+
+    return meeting
+  } catch (error) {
+    throw error
+  }
 }
 
 function normalizeParticipants(participants = []) {
