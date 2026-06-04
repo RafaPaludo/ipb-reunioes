@@ -38,11 +38,10 @@
         >
           <div class="flex gap-3">
             <div>{{ p.name }}</div>
-            <div class="text-muted">{{ p.email }}</div>
             <div class="text-muted">{{ unFormatPhoneNumber(p.phone) }}</div>
           </div>
           <UButton
-            v-if="selectedParticipants.length > 1"
+            v-if="p.type !== 'user'"
             color="error"
             type="button"
             size="md"
