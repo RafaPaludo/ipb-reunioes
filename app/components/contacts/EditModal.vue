@@ -62,7 +62,7 @@ async function onSubmit(event) {
     loading.value = true
 
     const { error } = await $fetch(`/api/contacts/${props.contact.id}`, {
-      method: 'PUT',
+      method: 'PATCH',
       body: {
         name: event.data.name,
         email: event.data.email,
