@@ -7,7 +7,7 @@ import {
 } from '../../repositories/meeting.repository'
 import { insertAgendas, updateAgenda, findAgendasIdByMeetingId, deleteAgendaById } from '../../repositories/agenda.repository'
 import { deleteAgendaPointByAgendaId } from '../../repositories/agenda-points.repository'
-import { insertParticipants } from '../../repositories/participant.repository'
+import { insertParticipants, deleteParticipants, findParticipantsIdByMeetingId } from '../../repositories/participant.repository'
 import { insertReminders } from '../../repositories/reminder.repository'
 
 import convertUCalendarDate from '../../utils/convertUCalendarDate'
@@ -251,22 +251,34 @@ export async function updateMeetingService({ meetingId, payload, userId, supabas
       }
     }
 
-    // // 3.Partucipantes (sempre inclui o usuário)
-    // const filterd = participants.filter(participant => participant.id !== userId)
-
-    // await insertParticipants(
-    //   [
-    //     ...filterd.map(participant => ({
-    //       contact_id: participant.id,
-    //       meeting_id: meeting.id,
-    //     })),
-    //     {
-    //       user_id: userId,
-    //       meeting_id: meeting.id,
-    //     }
-    //   ],
-    //   supabase
-    // )
+    /*
+      * Remove os participantes
+      * Adiciona novos participantes
+    */
+    const meetingParticipants = await findParticipantsIdByMeetingId(meetingId, supabase)
+    const incomingParticipants = participants.filter(participant => !meetingParticipants.some(meetingParticipant => participant.id === meetingParticipant.id))
+    const participantsToRemove = meetingParticipants.filter(meetingParticipant => !participants.some(participant => participant.id === meetingParticipant.id))
+    
+    // Adiciona novos participantes
+    if (incomingParticipants.length > 0) {
+      await insertParticipants(
+        [
+          ...incomingParticipants.map(participant => ({
+            contact_id: participant.id,
+            meeting_id: meetingId,
+          })),
+        ],
+        supabase
+      )
+    }
+    
+    // Remove participantes
+    if (participantsToRemove.length > 0) {
+      for (let i = 0, j = participantsToRemove.length; i < j; i++) {
+        const participantToRemove = participantsToRemove[i];
+        await deleteParticipants(participantToRemove.id, supabase)
+      }
+    }
 
     return meeting
   } catch (error) {
