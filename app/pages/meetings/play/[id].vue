@@ -39,14 +39,21 @@
                 <span>Resumo</span>
               </div>
 
-              <UTextarea
-                v-model="item.content"
-                class="w-full ml-6"
-                autoresize
-                placeholder="Use este campo para registrar os principais pontos discutidos"
-                @update:model-value="saveAgendaContentDebounced($event, item.id)"
-                :disabled="!canEdit"
-              />
+              <div class="ml-6">
+                <UTextarea
+                  v-model="item.content"
+                  class="w-full mb-4"
+                  autoresize
+                  placeholder="Use este campo para registrar os principais pontos discutidos"
+                  :disabled="!canEdit"
+                />
+                
+                <UButton
+                  @click="saveAgendaContent(item.content, item.id)"
+                >
+                  Salvar
+                </UButton>
+              </div>
 
               <!-- Lista de encaminhamentos -->
               <div class="flex gap-2 items-center mt-4">
@@ -195,6 +202,8 @@ async function saveAgendaContent (content, agendaId) {
         meeting_id: route.params.id,
       }
     })
+
+    toast.add({ title: 'Sucesso', description: `Pauta atualizada`, color: 'success' })
   } catch (error) {
     console.error(error)
     alert('Erro ao salvar o conteúdo da pauta.')
@@ -217,8 +226,6 @@ async function generateMeetingPDF () {
     alert('Erro ao gerar o PDF da reunião.')
   }
 }
-
-const { debouncedFn: saveAgendaContentDebounced } = useDebounce(saveAgendaContent, 5000)
 
 function addAgendaPointIntoAgenda (agendaPoint, item) {
   const modifiedAgenda = agendas.value.find(agenda => agenda.id === item.id)
