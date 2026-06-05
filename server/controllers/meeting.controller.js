@@ -18,7 +18,8 @@ export async function createMeetingWithSetupController({ payload, userId, supaba
       throw createError({ statusCode: 400, statusMessage: 'Dados inválidos' })
     }
 
-    throw createError({ statusCode: 400, statusMessage: error.message })
+    console.error('Falha inesperada no updateMeetingService:', error);
+    throw createError({ statusCode: 500, statusMessage: 'Erro interno no servidor.' })
   }
 }
 
