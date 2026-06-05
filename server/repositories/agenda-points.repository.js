@@ -1,15 +1,4 @@
-export async function insertAgendaPoint (payload, supabase) {
-  const { data, error } = await supabase
-    .from('agenda_points')
-    .insert(payload)
-    .select()
-    .single()
-  
-  if (error) throw error
-
-  return data
-}
-
+// GET
 export async function findAgendaPointWithMeeting(agendaPointId, supabase) {
   const { data, error } = await supabase
     .from('agenda_points')
@@ -28,6 +17,20 @@ export async function findAgendaPointWithMeeting(agendaPointId, supabase) {
   return data
 }
 
+// CREATE
+export async function insertAgendaPoint (payload, supabase) {
+  const { data, error } = await supabase
+    .from('agenda_points')
+    .insert(payload)
+    .select()
+    .single()
+  
+  if (error) throw error
+
+  return data
+}
+
+// UPDATE
 export async function updateAgendaPointById(agendaPointId, payload, supabase) {
   const { data, error } = await supabase
     .from('agenda_points')
@@ -41,11 +44,23 @@ export async function updateAgendaPointById(agendaPointId, payload, supabase) {
   return data
 }
 
+// DELETE
 export async function deleteAgendaPointById(agendaPointId, supabase) {
   const { data, error } = await supabase
     .from('agenda_points')
     .delete()
     .eq('id', agendaPointId)
+
+  if (error) throw error
+
+  return data
+}
+
+export async function deleteAgendaPointByAgendaId(agendaId, supabase) {
+  const { data, error } = await supabase
+    .from('agenda_points')
+    .delete()
+    .eq('agenda_id', agendaId)
 
   if (error) throw error
 

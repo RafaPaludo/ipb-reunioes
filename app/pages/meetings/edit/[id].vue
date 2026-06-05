@@ -94,17 +94,15 @@ async function saveEditMeeting () {
     const { error } = await $fetch(`/api/meetings/${route.params.id}`, {
       method: 'PATCH',
       body: {
-        meeting: {
-          title: meeting.value.title,
-          date: meeting.value.date,
-          start_time: meeting.value.start_time,
-          end_time: meeting.value.end_time,
-          location: meeting.value.location,
-          meeting_url: meeting.value.meeting_url,
-          meeting_type: meeting.value.meeting_type,
-          attachment_url: meeting.value.attachment_url,
-          agendas: meeting.value.agendas,
-        },
+        title: meeting.value.title,
+        date: meeting.value.date,
+        start_time: meeting.value.start_time,
+        end_time: meeting.value.end_time,
+        location: meeting.value.location,
+        meeting_url: meeting.value.meeting_url,
+        meeting_type: meeting.value.meeting_type,
+        attachment_url: meeting.value.attachment_url,
+        agendas: meeting.value.agendas,
         participants: participants.value
       }
     })

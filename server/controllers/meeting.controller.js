@@ -3,6 +3,7 @@ import {
   getMeetingAtTimeService,
   updateMeetingStatusService,
   getMeetingService,
+  updateMeetingService,
 } from '../services/meeting/service'
 
 export async function createMeetingWithSetupController({ payload, userId, supabase }) {
@@ -17,7 +18,8 @@ export async function createMeetingWithSetupController({ payload, userId, supaba
       throw createError({ statusCode: 400, statusMessage: 'Dados inválidos' })
     }
 
-    throw createError({ statusCode: 400, statusMessage: error.message })
+    console.error('Falha inesperada no updateMeetingService:', error);
+    throw createError({ statusCode: 500, statusMessage: 'Erro interno no servidor.' })
   }
 }
 
@@ -49,6 +51,23 @@ export async function updateMeetingStatusController({ payload, userId, meetingId
   } catch (error) {
     if (error.message === 'INVALID_STATUS') {
       throw createError({ statusCode: 400, statusMessage: 'Status informado é inválido.' })
+    }
+
+    throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+
+export async function updateMeetingController({ payload, userId, meetingId, supabase }) {
+  try {
+    return await updateMeetingService({
+      payload,
+      meetingId,
+      userId,
+      supabase,
+    })
+  } catch (error) {
+    if (error.message === 'INVALID_PAYLOAD') {
+      throw createError({ statusCode: 400, statusMessage: 'Dados inválidos' })
     }
 
     throw createError({ statusCode: 400, statusMessage: error.message })

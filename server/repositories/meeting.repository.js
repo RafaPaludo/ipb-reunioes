@@ -41,7 +41,7 @@ export async function findMeetingByTimeRange({ startUTC, endUTC, userId }, supab
   return data
 }
 
-export async function updateMeetingStatus({ payload, meetingId, userId }, supabase) {
+export async function updateMeetingById({ payload, meetingId, userId }, supabase) {
   const { data, error } = await supabase
     .from('meetings')
     .update(payload)
