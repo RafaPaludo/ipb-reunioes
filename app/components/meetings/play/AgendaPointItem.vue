@@ -34,6 +34,26 @@
         class="ml-8 text-[14px] text-muted"
         :class="{ 'line-through opacity-70': isResolved }"
       >
+        <div class="flex gap-6 my-1">
+          <div class="flex items-center gap-1">
+            <UIcon
+              name="i-lucide-user"
+              class="size-4"
+            />
+            <span>
+              {{ participantAssignedToAgendaPoint.name }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <UIcon
+              name="i-lucide-calendar-clock"
+              class="size-4"
+            />
+            {{ convertTimeStampzToLocalDate(currentAgendaPoint.due_date) }}
+          </div>
+        </div>
+
         <UBadge
           class="font-bold rounded-full"
           size="sm"
@@ -41,8 +61,6 @@
         >
           {{ isResolved ? 'Resolvido' : 'Pendente' }}
         </UBadge>
-        • Responsável: {{ participantAssignedToAgendaPoint.name }}
-        • Até: {{ convertTimeStampzToLocalDate(currentAgendaPoint.due_date) }}
       </div>
     </UCard>
   </div>
