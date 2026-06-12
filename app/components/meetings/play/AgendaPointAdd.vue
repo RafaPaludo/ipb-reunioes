@@ -1,5 +1,7 @@
 <template>
-  <div>
+  <UCard
+    variant="subtle"
+  >
     <UForm
       v-if="isEditing"
       :schema="schema"
@@ -9,7 +11,7 @@
       <UFormField name="agendaPoint">
         <UTextarea
           v-model="formState.agendaPoint"
-          placeholder="Adicionar encaminhamento"
+          placeholder="O que será feito?"
           class="w-full"
           :rows="1"
           autoresize
@@ -17,20 +19,19 @@
         />
       </UFormField>
   
-      <div class="mt-3 mb-5 flex items-center gap-6">
+      <div class="mt-3 mb-5 flex items-center gap-12">
         <UFormField
           name="assigned"
           label="Responsável"
           required
-          class="flex max-sm:flex-col justify-between items-center gap-4"
-          :ui="{ container: 'flex-1',  }"
+          class="flex-1"
         >
           <USelectMenu
             v-model="formState.assigned"
             :items="props.participants"
             value-key="id"
             size="lg"
-            class="min-w-50"
+            class="w-full"
           >
             <template #item-label="{ item }">
               {{ item.name }}
@@ -50,10 +51,9 @@
           name="dueDate"
           label="Data"
           required
-          class="flex max-sm:flex-col justify-between items-center gap-4"
-          :ui="{ container: 'flex-1' }"
+          class="flex-1"
         >
-          <UPopover>
+          <UPopover class="w-full">
             <UButton variant="subtle" icon="i-lucide-calendar" size="lg">
               {{ formState.dueDate ? df.format(formState.dueDate.toDate(getLocalTimeZone())) : 'Selecione a data' }}
             </UButton>
@@ -66,7 +66,7 @@
       </div>
   
       <div class="flex gap-2">
-        <UButton type="submit">Adicionar</UButton>
+        <UButton type="submit" :loading="loading">Adicionar</UButton>
         <UButton variant="outline" @click="resetAgendaPointForm">Cancelar</UButton>
       </div>
     </UForm>
@@ -81,7 +81,7 @@
     >
       Adicionar encaminhamento
     </UButton>
-  </div>
+  </UCard>
 </template>
 
 <script setup>
@@ -103,12 +103,13 @@ const props = defineProps({
   },
 })
 const emit = defineEmits(['update:agendas'])
+const toast = useToast()
 
 const df = new DateFormatter('pt-BR', { dateStyle: 'medium' })
 
 const schema = z.object({
   agendaPoint: z.string('Encaminhamento necessário').min(2, 'Precisa ter ao menos 2 letras'),
-  assigned: z.union([z.number('Campo necessário'), z.string('Campo necessário')]),
+  assigned: z.union([z.number(), z.string()], 'Campo necessário'),
   dueDate: z.object({
     calendar: z.object({
       identifier: z.string()
@@ -117,10 +118,11 @@ const schema = z.object({
     day: z.number(),
     month: z.number(),
     year: z.number(),
-  }),
+  }, 'Campo necessário'),
 })
 
 const isEditing = ref(false)
+const loading = ref(false)
 const formState = reactive({
   agendaPoint: '',
   assigned: undefined,
@@ -128,6 +130,8 @@ const formState = reactive({
 })
 
 async function createAgendaPoint ({ data }, agenda) {
+  loading.value = true
+
   try {
     const agendaPointCreated = await $fetch(`/api/agenda-points`, {
       method: "POST",
@@ -145,9 +149,12 @@ async function createAgendaPoint ({ data }, agenda) {
 
     resetAgendaPointForm()
     isEditing.value = false
+    toast.add({ title: 'Sucesso', description: `Encaminhamento criado com sucesso`, color: 'success' })
   } catch (error) {
     console.error(error)
     alert('Erro ao salvar o encaminhamento.')
+  } finally {
+    loading.value = false
   }
 }
 

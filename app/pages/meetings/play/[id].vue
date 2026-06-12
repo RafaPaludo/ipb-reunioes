@@ -9,7 +9,7 @@
     </template>
 
     <template #body>
-      <div class="w-full mx-auto">
+      <div class="w-full max-w-screen-2xl mx-auto">
         <div class="mb-4" v-if="!loading">
           <h3 class="text-lg font-bold">{{ meeting.title }}</h3>
           <p class="my-2" >
@@ -24,66 +24,130 @@
               >{{ meeting.meeting_url }}</UButton>
             </div>
           </p>
-          <UButton @click="startMeeting" v-if="meetingInitialized" color="primary" icon="i-lucide-play">Iniciar a Reunião</UButton>
-          <UButton @click="finishMeeting" v-if="meetingInProgress" color="success" icon="material-symbols:check-circle" variant="subtle">Finalizar Reunião</UButton>
-          <UButton @click="startMeeting" v-if="meetingFinished" color="warning" icon="material-symbols:restart-alt" variant="subtle">Reabrir Reunião</UButton>
-          <UButton @click="generateMeetingPDF" v-if="meetingFinished" color="warning" icon="material-symbols:restart-alt" variant="subtle">Gerar PDF</UButton>
         </div>
         
         <!-- Agendas -->
-        <UAccordion type="multiple" :items="agendas">
-          <template #content="{ item }">
-            <UPageCard variant="soft">
-              <div class="flex gap-2 items-center">
-                <UIcon name="material-symbols:text-ad-outline" class="size-5" />
-                <span>Resumo</span>
+
+        <div class="mx-auto grid gap-6 lg:grid-cols-3">
+          <section class="col-span-2">
+            <!-- TODO: NO FUTURO FAZER UM FORMULÁRIO PARA EDITAR AS INFOS BÁSICAS DA REUNIÃO -->
+            <!-- <UCard>
+              Titulo
+              Inicio
+              Fim
+              Localização
+
+            </UCard> -->
+
+            <div class="flex items-center justify-between mb-6">
+              <div>
+                <h2 class="text-lg font-semibold">Pautas</h2>
+                <p class="text-sm text-muted-foreground">{{ agendas.length }} pautas · 0 encaminhamentos</p>
               </div>
 
-              <div class="ml-6">
-                <UTextarea
-                  v-model="item.content"
-                  class="w-full mb-4"
-                  autoresize
-                  placeholder="Use este campo para registrar os principais pontos discutidos"
-                  :disabled="!canEdit"
-                />
-                
+              <UButton label="Nova Pauta" icon="i-lucide-plus"/>
+            </div>
+
+            <UAccordion type="multiple" :items="agendas">
+              <template #content="{ item }">
+                <UPageCard variant="subtle">
+                  <!-- Descrição da Pauta -->
+                  <div>
+                    <span>Descrição</span>
+  
+                    <UTextarea
+                      v-model="item.content"
+                      class="w-full my-2"
+                      autoresize
+                      placeholder="Use este campo para registrar os principais pontos discutidos"
+                      :disabled="!canEdit"
+                    />
+                    
+                    <UButton
+                      @click="saveAgendaContent(item.content, item.id)"
+                    >
+                      Salvar
+                    </UButton>
+                  </div>
+
+                  <USeparator />
+
+                  <!-- Lista de encaminhamentos -->
+                  <span>
+                    Encaminhamentos ({{ item.agendaPoints.length }})
+                  </span>
+
+                  <MeetingsPlayAgendaPointItem
+                    v-for="agendaPoint in item.agendaPoints"
+                    :key="agendaPoint.id"
+                    :agendaPoint="agendaPoint"
+                    :participants="participants"
+                    :disabled="!canEdit"
+                  />
+                  
+                  <MeetingsPlayAgendaPointAdd
+                    :agenda="item"
+                    :meetingId="route.params.id"
+                    :participants="participants"
+                    :disabled="!canEdit"
+                    @update:agendas="(agendaPoint) => addAgendaPointIntoAgenda(agendaPoint, item)"
+                  />
+                </UPageCard>
+              </template>
+            </UAccordion>
+          </section>
+
+          <aside>
+            <UCard variant="subtle">
+              <template #header>
+                <UIcon name="i-lucide-calendar" />
+                Controle
+              </template>
+
+              <div class="flex flex-col items-center gap-2">
+                <div>00:00:00</div>
+                <div>
+                  Tempo decorrido
+                </div>
+              </div>
+
+              <div class="mt-6 flex flex-col gap-2">
                 <UButton
-                  @click="saveAgendaContent(item.content, item.id)"
-                >
-                  Salvar
-                </UButton>
-              </div>
+                  v-if="meetingInitialized"
+                  color="primary"
+                  icon="i-lucide-play"
+                  block
+                  @click="startMeeting"
+                >Iniciar a Reunião</UButton>
 
-              <!-- Lista de encaminhamentos -->
-              <div class="flex gap-2 items-center mt-4">
-                <UIcon name="material-symbols:list-alt-check-outline-rounded" class="size-5" />
-                <span>
-                  Encaminhamentos
-                </span>
-              </div>
+                <UButton
+                  v-if="meetingInProgress"
+                  color="primary"
+                  icon="material-symbols:check-circle"
+                  block
+                  @click="finishMeeting"
+                >Finalizar Reunião</UButton>
 
-              <MeetingsPlayAgendaPointItem
-                v-for="agendaPoint in item.agendaPoints"
-                :key="agendaPoint.id"
-                :agendaPoint="agendaPoint"
-                :participants="participants"
-                :disabled="!canEdit"
-                class="ml-6"
-              />
-              
-              <div class="ml-6">
-                <MeetingsPlayAgendaPointAdd
-                  :agenda="item"
-                  :meetingId="route.params.id"
-                  :participants="participants"
-                  :disabled="!canEdit"
-                  @update:agendas="(agendaPoint) => addAgendaPointIntoAgenda(agendaPoint, item)"
-                />
+                <UButton
+                  v-if="meetingFinished"
+                  color="neutral"
+                  icon="material-symbols:restart-alt"
+                  variant="subtle"
+                  block
+                  @click="startMeeting"
+                >Reabrir Reunião</UButton>
+
+                <UButton
+                  v-if="meetingFinished"
+                  color="primary"
+                  icon="i-tabler-file-type-pdf"
+                  block
+                  @click="generateMeetingPDF"
+                >Gerar PDF</UButton>
               </div>
-            </UPageCard>
-          </template>
-        </UAccordion>
+            </UCard>
+          </aside>
+        </div>
       </div>
     </template>
   </UDashboardPanel>
@@ -147,7 +211,8 @@ async function getMeetingWithAgenda() {
       agendas.value = data.meeting_agendas.map((agenda, idx) => {
         return {
           id: agenda.id || '',
-          label:  idx + 1 + "ª Pauta: " + (agenda.title || ''),
+          label:  agenda.title || '',
+          icon: 'material-symbols:counter-' + (idx + 1) + '-outline',
           content: agenda.content || '',
           agendaPoints: agenda.agenda_points || []
         }
