@@ -106,10 +106,21 @@ export async function findMeetingByIdWithIncludes({
   return data
 }
 
+/**
+ * Busca todos os dados necessários para montar o resumo da reunião.
+ *
+ * Inclui:
+ * - Informações básicas da reunião
+ * - Participantes
+ * - Agendas
+ * - Encaminhamentos
+ * - Responsáveis pelos encaminhamentos
+ */
 export async function findMeetingPdfData({ meetingId, userId, supabase }) {
   const { data, error } = await supabase
     .from('meetings')
     .select(`
+      id,
       title,
       start_time,
       end_time,
@@ -147,6 +158,12 @@ export async function findMeetingPdfData({ meetingId, userId, supabase }) {
   return data
 }
 
+/**
+ * Atualiza o caminho do PDF associado à reunião.
+ *
+ * O caminho armazenado é utilizado posteriormente para gerar
+ * URLs temporárias sob demanda.
+ */
 export async function updateMeetingPdfPath({
   meetingId,
   filePath,

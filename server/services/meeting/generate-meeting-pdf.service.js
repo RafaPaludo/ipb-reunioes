@@ -1,22 +1,37 @@
 import { findMeetingPdfData, updateMeetingPdfPath } from '../../repositories/meeting.repository'
-import { createSignedMeetingPdfUrl, uploadMeetingPdf } from '../../repositories/storage.repository'
-import { buildMeetingPdf } from '../../pdf/templates/meeting-summary.template'
+import { createSignedStorageUrl, uploadMeetingPdf } from '../../repositories/storage.repository'
+import { buildMeetingSummaryPdf } from '../../pdf/templates/meeting-summary.template'
 
+/**
+ * Gera o PDF de uma reunião e retorna uma URL temporária de acesso.
+ *
+ * Fluxo:
+ * 1. Busca os dados necessários para o PDF.
+ * 2. Retorna uma URL assinada caso o PDF já exista.
+ * 3. Gera o PDF em memória.
+ * 4. Faz upload para o Storage.
+ * 5. Salva o caminho do arquivo na reunião.
+ * 6. Retorna uma nova URL assinada.
+ */
 export async function generateMeetingPdfService({ meetingId, userId, supabase }) {
   const meeting = await findMeetingPdfData({ meetingId, userId, supabase })
+  const expiresIn = 60 * 60 * 24 // 24 Horas
+  const bucket = 'meetings_pdf'
 
   if (!meeting) {
     throw new Error('NOT_FOUND')
   }
 
   if (meeting.pdf_path) {
-    return await createSignedMeetingPdfUrl({
+    return await createSignedStorageUrl({
+      bucket,
       filePath: meeting.pdf_path,
-      supabase
+      supabase,
+      expiresIn
     })
   }
 
-  const pdfBuffer = await buildMeetingPdf(meeting)
+  const pdfBuffer = await buildMeetingSummaryPdf(meeting)
 
   const filePath = await uploadMeetingPdf({
     meetingId,
@@ -30,8 +45,10 @@ export async function generateMeetingPdfService({ meetingId, userId, supabase })
     supabase
   })
 
-  return await createSignedMeetingPdfUrl({
+  return await createSignedStorageUrl({
+    bucket,
     filePath,
-    supabase
+    supabase,
+    expiresIn
   })
 }
