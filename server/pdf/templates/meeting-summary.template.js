@@ -1,7 +1,17 @@
 import PDFDocument from 'pdfkit'
 import getStream from 'get-stream'
+import { MEETING_STATUS } from '#shared/constants/meeting-status'
+import { AGENDA_POINTS_TRANSLATION } from '#shared/constants/agenda-points'
 
-export async function buildMeetingPdf(meeting) {
+/**
+ * Monta o PDF de resumo da reunião.
+ *
+ * Responsável apenas pela composição visual do documento.
+ * Não acessa banco de dados, Storage ou APIs externas.
+ *
+ * Retorna um Buffer contendo o arquivo PDF.
+ */
+export async function buildMeetingSummaryPdf(meeting) {
   const doc = new PDFDocument({ margin: 50 })
   // Adiciona informações no header que é um PDF
   // event.node.res.setHeader('Content-Type', 'application/pdf');
@@ -31,19 +41,15 @@ export async function buildMeetingPdf(meeting) {
   =======
   */
 
-  const meetingStatusTranslation = Object.freeze({
-    schedule: 'Agendada',
-    in_progress: 'Iniciada',
-    paused: 'Pausada',
-    finished: 'Finalizada',
-  })
-
   doc
     .fontSize(11)
     .text('Título: ' + meeting.title)
     .text('Data: ' + convertTimeStampzToLocalDate(meeting.start_time))
     .text('Horário: ' + convertTimestampToTimeStringWithTZ(meeting.start_time)+ ' - ' + convertTimestampToTimeStringWithTZ(meeting.end_time))
-    .text('Status: ' + meetingStatusTranslation[meeting.meeting_status])
+    .text(
+      'Status: ' +
+      Object.values(MEETING_STATUS).find(status => status.key === meeting.meeting_status)?.translatedPT
+    )
   
   doc.moveDown()
 
@@ -82,11 +88,6 @@ export async function buildMeetingPdf(meeting) {
   =======
   */
 
-  const agendaPointTranslation = Object.freeze({
-    pending: 'Pendente',
-    resolved: 'Resolvido'
-  })
-
   function getParticipantName(meetingParticipant) {
     if (!meetingParticipant) return '—'
 
@@ -106,7 +107,7 @@ export async function buildMeetingPdf(meeting) {
         .fontSize(11)
         .text(`- ${point.content}`, { indent: 20 })
         .text(`Responsável: ${getParticipantName(point.meeting_participants) || '-'}`, { indent: 40 })
-        .text(`Status: ${agendaPointTranslation[point.status]}`, { indent: 40 })
+        .text(`Status: ${AGENDA_POINTS_TRANSLATION[point.status]}`, { indent: 40 })
     })
   })
   

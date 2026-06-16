@@ -101,6 +101,11 @@ export async function getMeetingController({ query, userId, meetingId, supabase 
   }
 }
 
+/**
+ * Controller responsável pela geração e recuperação do PDF da reunião.
+ *
+ * Traduz erros de domínio para respostas HTTP apropriadas.
+ */
 export async function getPDFMeetingController({ userId, meetingId, supabase }) {
   try {
     return await generateMeetingPdfService({

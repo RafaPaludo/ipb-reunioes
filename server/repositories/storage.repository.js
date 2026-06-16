@@ -1,3 +1,11 @@
+/**
+ * Envia o PDF da reunião para o bucket privado do Supabase Storage.
+ *
+ * O arquivo é salvo no formato:
+ * meetings/{meetingId}/resumo.pdf
+ *
+ * Retorna o caminho persistido do arquivo.
+ */
 export async function uploadMeetingPdf({ 
   meetingId,
   buffer,
@@ -17,15 +25,22 @@ export async function uploadMeetingPdf({
   return data.path
 }
 
-export async function createSignedMeetingPdfUrl({ 
+/**
+ * Gera uma URL temporária para acesso a um arquivo privado.
+ *
+ * A URL expira após o tempo configurado em `expiresIn`.
+ */
+export async function createSignedStorageUrl({ 
+  bucket,
   filePath,
+  expiresIn = 60 * 60 * 24, // 24 Horas
   supabase
 }) {
   const { data, error } = await supabase.storage
-    .from('meetings_pdf')
+    .from(bucket)
     .createSignedUrl(
       filePath,
-      60 * 60 * 24 // 24 horas
+      expiresIn
     )
 
   if (error) throw error
