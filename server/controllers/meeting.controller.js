@@ -4,7 +4,9 @@ import {
   updateMeetingStatusService,
   getMeetingService,
   updateMeetingService,
+  getPDFMeetingService,
 } from '../services/meeting/service'
+import { generateMeetingPdfService } from '../services/meeting/generate-meeting-pdf.service'
 
 export async function createMeetingWithSetupController({ payload, userId, supabase }) {
   try {
@@ -70,7 +72,7 @@ export async function updateMeetingController({ payload, userId, meetingId, supa
       throw createError({ statusCode: 400, statusMessage: 'Dados inválidos' })
     }
 
-    throw createError({ statusCode: 400, statusMessage: error.message })
+    throw createError({ statusCode: 500, statusMessage: 'Erro interno no servidor.' })
   }
 }
 
@@ -96,5 +98,21 @@ export async function getMeetingController({ query, userId, meetingId, supabase 
     }
 
     throw createError({ statusCode: 400, statusMessage: error.message })
+  }
+}
+
+export async function getPDFMeetingController({ userId, meetingId, supabase }) {
+  try {
+    return await generateMeetingPdfService({
+      meetingId,
+      userId,
+      supabase,
+    })
+  } catch (error) {
+    if (error.message === 'NOT_FOUND') {
+      throw createError({ statusCode: 404, statusMessage: 'Reunião não encontrada' })
+    }
+
+    throw createError({ statusCode: 500, statusMessage: 'Erro interno no servidor.' })
   }
 }
