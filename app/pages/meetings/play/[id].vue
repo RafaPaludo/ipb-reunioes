@@ -10,7 +10,7 @@
 
     <template #body>
       <div class="w-full max-w-screen-2xl mx-auto">
-        <USkeleton class="h-12 w-full" v-if="loading" />
+        <USkeleton class="h-12 w-full" v-if="pageLoading" />
 
         <!-- Resumo da reunião -->
         <div class="mb-4" v-else>
@@ -31,7 +31,7 @@
         
         <!-- Agendas, encaminhamentos e Ações-->
         <div class="mx-auto grid gap-6 lg:grid-cols-3">
-          <USkeleton class="h-[60vh] w-full my-8 col-span-2" v-if="loading" />
+          <USkeleton class="h-[60vh] w-full my-8 col-span-2" v-if="pageLoading" />
           <section class="col-span-2" v-else>
             <!-- TODO: NO FUTURO FAZER UM FORMULÁRIO PARA EDITAR AS INFOS BÁSICAS DA REUNIÃO -->
             <!-- <UCard>
@@ -101,7 +101,7 @@
             </UAccordion>
           </section>
 
-          <USkeleton class="h-[60vh] w-full my-8" v-if="loading" />
+          <USkeleton class="h-[60vh] w-full my-8" v-if="pageLoading" />
           <aside v-else>
             <UCard variant="subtle">
               <template #header>
@@ -122,8 +122,8 @@
                   color="primary"
                   icon="i-lucide-play"
                   block
-                  :disabled="loading"
-                  :loading="loading"
+                  :disabled="actionsLoading"
+                  :loading="actionsLoading"
                   @click="startMeeting"
                 >Iniciar a Reunião</UButton>
 
@@ -132,8 +132,8 @@
                   color="primary"
                   icon="material-symbols:check-circle"
                   block
-                  :disabled="loading"
-                  :loading="loading"
+                  :disabled="actionsLoading"
+                  :loading="actionsLoading"
                   @click="finishMeeting"
                 >Finalizar Reunião</UButton>
 
@@ -143,8 +143,8 @@
                   icon="material-symbols:restart-alt"
                   variant="subtle"
                   block
-                  :disabled="loading"
-                  :loading="loading"
+                  :disabled="actionsLoading"
+                  :loading="actionsLoading"
                   @click="startMeeting"
                 >Reabrir Reunião</UButton>
 
@@ -153,8 +153,8 @@
                   color="primary"
                   icon="i-tabler-file-type-pdf"
                   block
-                  :disabled="loading"
-                  :loading="loading"
+                  :disabled="actionsLoading"
+                  :loading="actionsLoading"
                   @click="generateMeetingPDF"
                 >Gerar PDF</UButton>
               </div>
@@ -170,7 +170,8 @@
 const route = useRoute()
 const toast = useToast()
 
-const loading = ref(true)
+const pageLoading = ref(true)
+const actionsLoading = ref(false)
 const agendas = ref([])
 const participants = ref([])
 const meeting = ref({
@@ -199,7 +200,7 @@ const canEdit = computed(() => editPermission[meeting.value.meeting_status])
 const totalAgendaPoints = computed(() => agendas.value.reduce((acc, agenda) => acc + agenda.agendaPoints.length, 0))
 
 async function getMeetingWithAgenda() {
-  loading.value = true
+  pageLoading.value = true
   
   try {
     const data = await $fetch(`/api/meetings/${route.params.id}`, {
@@ -236,7 +237,7 @@ async function getMeetingWithAgenda() {
     console.error(err)
     alert('Erro ao buscar dados da reunião')
   } finally {
-    loading.value = false
+    pageLoading.value = false
   }
 }
 
@@ -290,7 +291,7 @@ async function saveAgendaContent (content, agendaId) {
 }
 
 async function generateMeetingPDF () {
-  loading.value = true
+  actionsLoading.value = true
 
   try {
     const pdfUrl = await $fetch(`/api/meetings/${route.params.id}/pdf`, {
@@ -330,7 +331,7 @@ async function generateMeetingPDF () {
       }]
     })
   } finally {
-    loading.value = false
+    actionsLoading.value = false
   }
 }
 
