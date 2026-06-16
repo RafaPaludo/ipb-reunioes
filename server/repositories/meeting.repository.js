@@ -105,3 +105,59 @@ export async function findMeetingByIdWithIncludes({
 
   return data
 }
+
+export async function findMeetingPdfData({ meetingId, userId, supabase }) {
+  const { data, error } = await supabase
+    .from('meetings')
+    .select(`
+      title,
+      start_time,
+      end_time,
+      meeting_status,
+      pdf_path,
+      meeting_participants(
+        contacts( name ),
+        users( name )
+      ),
+      meeting_agendas(
+        id,
+        title,
+        content,
+
+        agenda_points(
+          id,
+          content,
+          status,
+          due_date,
+
+          meeting_participants:participant_id(
+            id,
+            contacts( name ),
+            users( name )
+          )
+        )
+      )
+    `)
+    .eq('id', meetingId)
+    .eq('created_by', userId)
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export async function updateMeetingPdfPath({
+  meetingId,
+  filePath,
+  supabase
+}) {
+  const { error } = await supabase
+    .from('meetings')
+    .update({
+      pdf_path: filePath
+    })
+    .eq('id', meetingId)
+
+  if (error) throw error
+}

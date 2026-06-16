@@ -10,7 +10,10 @@
 
     <template #body>
       <div class="w-full max-w-screen-2xl mx-auto">
-        <div class="mb-4" v-if="!loading">
+        <USkeleton class="h-12 w-full" v-if="loading" />
+
+        <!-- Resumo da reunião -->
+        <div class="mb-4" v-else>
           <h3 class="text-lg font-bold">{{ meeting.title }}</h3>
           <p class="my-2" >
             {{ meeting.date }} •
@@ -26,10 +29,10 @@
           </p>
         </div>
         
-        <!-- Agendas -->
-
+        <!-- Agendas, encaminhamentos e Ações-->
         <div class="mx-auto grid gap-6 lg:grid-cols-3">
-          <section class="col-span-2">
+          <USkeleton class="h-[60vh] w-full my-8 col-span-2" v-if="loading" />
+          <section class="col-span-2" v-else>
             <!-- TODO: NO FUTURO FAZER UM FORMULÁRIO PARA EDITAR AS INFOS BÁSICAS DA REUNIÃO -->
             <!-- <UCard>
               Titulo
@@ -42,7 +45,7 @@
             <div class="flex items-center justify-between mb-6">
               <div>
                 <h2 class="text-lg font-semibold">Pautas</h2>
-                <p class="text-sm text-muted-foreground">{{ agendas.length }} pautas · 0 encaminhamentos</p>
+                <p class="text-sm text-muted-foreground">{{ agendas.length }} pautas · {{ totalAgendaPoints }} encaminhamentos</p>
               </div>
 
               <UButton label="Nova Pauta" icon="i-lucide-plus"/>
@@ -65,6 +68,7 @@
                     
                     <UButton
                       @click="saveAgendaContent(item.content, item.id)"
+                      :disabled="!canEdit"
                     >
                       Salvar
                     </UButton>
@@ -97,7 +101,8 @@
             </UAccordion>
           </section>
 
-          <aside>
+          <USkeleton class="h-[60vh] w-full my-8" v-if="loading" />
+          <aside v-else>
             <UCard variant="subtle">
               <template #header>
                 <UIcon name="i-lucide-calendar" />
@@ -117,6 +122,8 @@
                   color="primary"
                   icon="i-lucide-play"
                   block
+                  :disabled="loading"
+                  :loading="loading"
                   @click="startMeeting"
                 >Iniciar a Reunião</UButton>
 
@@ -125,6 +132,8 @@
                   color="primary"
                   icon="material-symbols:check-circle"
                   block
+                  :disabled="loading"
+                  :loading="loading"
                   @click="finishMeeting"
                 >Finalizar Reunião</UButton>
 
@@ -134,6 +143,8 @@
                   icon="material-symbols:restart-alt"
                   variant="subtle"
                   block
+                  :disabled="loading"
+                  :loading="loading"
                   @click="startMeeting"
                 >Reabrir Reunião</UButton>
 
@@ -142,6 +153,8 @@
                   color="primary"
                   icon="i-tabler-file-type-pdf"
                   block
+                  :disabled="loading"
+                  :loading="loading"
                   @click="generateMeetingPDF"
                 >Gerar PDF</UButton>
               </div>
@@ -183,6 +196,7 @@ const meetingInitialized = computed(() => meeting.value.meeting_status === 'sche
 const meetingInProgress = computed(() => meeting.value.meeting_status === 'in_progress')
 const meetingFinished = computed(() => meeting.value.meeting_status === 'finished')
 const canEdit = computed(() => editPermission[meeting.value.meeting_status])
+const totalAgendaPoints = computed(() => agendas.value.reduce((acc, agenda) => acc + agenda.agendaPoints.length, 0))
 
 async function getMeetingWithAgenda() {
   loading.value = true
@@ -276,6 +290,8 @@ async function saveAgendaContent (content, agendaId) {
 }
 
 async function generateMeetingPDF () {
+  loading.value = true
+
   try {
     const pdfUrl = await $fetch(`/api/meetings/${route.params.id}/pdf`, {
       method: 'GET'
@@ -285,10 +301,36 @@ async function generateMeetingPDF () {
       window.open(pdfUrl, '_blank')
     }
 
-    toast.add({ title: 'Sucesso', description: `PDF gerado com sucesso.`, color: 'success' })
+    toast.add({
+      title: 'Sucesso',
+      description: `PDF gerado com sucesso.`,
+      color: 'success',
+      actions: [{
+        icon: 'i-lucide-clipboard-copy',
+        label: 'Copiar Link',
+        color: 'neutral',
+        variant: 'subtle',
+        onClick: async () => {
+          await navigator.clipboard.writeText(pdfUrl)
+          toast.add({ title: 'Copiado para a área de transferência.', color: 'success', icon: 'i-lucide-check' })
+        }
+      }]
+    })
   } catch (error) {
-    console.error(error)
-    alert('Erro ao gerar o PDF da reunião.')
+    toast.add({
+      title: 'Ops, algo deu errado.',
+      description: `PDF não pode ser gerado.`,
+      color: 'error',
+      actions: [{
+        icon: 'i-lucide-refresh-cw',
+        label: 'Retry',
+        color: 'neutral',
+        variant: 'outline',
+        onClick: generateMeetingPDF
+      }]
+    })
+  } finally {
+    loading.value = false
   }
 }
 
